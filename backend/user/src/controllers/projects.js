@@ -7,11 +7,19 @@ import {
     deletedProjectByProjectId, 
     syncUserForProjectDelete 
 } from "../services/projectService.js";
+import { redisGet, redisSet, redisDel } from "../services/redisService.js";
 
 export const getAllProjectsOfUser = async (req, res) => {
     try {
         const { _id: userId } = req.identity;
-        const projects = await getAllProjectsByUserId(userId);
+
+        let projects = await redisGet(`projects:${userId}`);
+
+        if(!projects) {
+            projects = await getAllProjectsByUserId(userId);
+            await redisSet(`projects:${userId}`, projects, 5 * 60); // for 5 minutes
+        }
+
         return res.status(200).json({ message: "Projects fetched successfully", projects });
     } catch (error) {
         console.error("Error fetching projects:", error);
@@ -36,6 +44,8 @@ export const createProject = async (req, res) => {
         console.error("Error checking existing project:", error);
         return res.status(500).json({ message: "Failed to check project existence" });   
     }
+
+    await redisDel(`projects:${userId}`);
 
     try {
         const project = await createNewProject({ projectName, description, userId });
@@ -65,9 +75,11 @@ export const updateProject = async (req, res) => {
         return res.status(500).json({ message: "Failed to check project existence" });   
     }
 
+    await redisDel(`projects:${userId}`);
+
     try {
-        await updateProjectDetails(projectId, projectName, description);
-        return res.status(200).json({ message: "Project details updated successfully" });
+        const project = await updateProjectDetails(projectId, projectName, description);
+        return res.status(200).json({ message: "Project details updated successfully", project });
     } catch (error) {
         console.error("Failed to update project details:", error);
         return res.status(500).json({ message: "Failed to update project details. Please try again." });
@@ -84,6 +96,8 @@ export const deleteProject = async (req, res) => {
         console.error("Failed to delete project:", error);
         return res.status(500).json({ message: "Failed to delete project. Please try again." });
     }
+
+    await redisDel(`projects:${userId}`);
 
     try {
         await syncUserForProjectDelete(userId, projectId);

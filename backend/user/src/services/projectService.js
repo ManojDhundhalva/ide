@@ -16,7 +16,7 @@ export const isAlreadyExistsProject = async (userId, projectName) => {
 
 export const addProjectToUser = (userId, projectId) => UserModel.findByIdAndUpdate(userId, { $push: { projects: projectId } });
 
-export const updateProjectDetails = (projectId, projectName, description) => ProjectModel.findByIdAndUpdate(projectId, { $set: { projectName, description } }, { runValidators: true });
+export const updateProjectDetails = (projectId, projectName, description) => ProjectModel.findByIdAndUpdate(projectId, { $set: { projectName, description } }, { new: true, runValidators: true });
 
 export const deletedProjectByProjectId = (projectId) => ProjectModel.findByIdAndDelete(projectId);
 

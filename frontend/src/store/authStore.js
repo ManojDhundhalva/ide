@@ -40,8 +40,9 @@ export const useAuthStore = create((set) => ({
             });
 
         } catch (error) {
-            set({ error: error.message || "Authentication failed" });
-            console.error(error);
+            const errorMsg = error.response?.data?.message || error.message || "Authentication failed";
+            set({ authenticationError: errorMsg });
+            console.error("Authentication Error:", errorMsg);
         } finally {
             set({ authenticationLoading: false });
         }
@@ -64,8 +65,9 @@ export const useAuthStore = create((set) => ({
             });
 
         } catch (error) {
-            set({ error: error.message || "Logout failed" });
-            console.error(error);
+            const errorMsg = error.response?.data?.message || error.message || "Logout failed";
+            set({ logOutError: errorMsg });
+            console.error("Logout Error:", errorMsg);
         } finally {
             set({ logOutLoading: false });
         }
@@ -86,8 +88,9 @@ export const useAuthStore = create((set) => ({
                 },
             });
         } catch (error) {
-            set({ error: error.message || "Fetch user failed" });
-            console.error(error);
+            const errorMsg = error.response?.data?.message || error.message || "Fetch user failed";
+            set({ fetchUserError: errorMsg });
+            console.error("FetchUser Error:", errorMsg);
         } finally {
             set({ fetchUserLoading: false });
         }

@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import TerminalComponent from "../components/Terminal";
-import FileExplorer from "../components/FileExplorer";
+import FileExplorerComponent from "../components/FileExplorer";
+import CodeEditorComponent from "../components/CodeEditor";
 
 const WorkspacePage = () => {
   const { id } = useParams();
@@ -8,7 +9,8 @@ const WorkspacePage = () => {
   return (
     <>
       <div>WorkspacePage</div>
-      <FileExplorer />
+      <CodeEditorComponent />
+      <FileExplorerComponent />
       <TerminalComponent/>
     </>
   );

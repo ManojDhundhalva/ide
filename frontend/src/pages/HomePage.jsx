@@ -31,7 +31,15 @@ const HomePage = () => {
       <div style={{ marginBottom: "20px" }}>
         <strong>Email:</strong> {user.email || "Not available"} <br />
         <strong>User ID:</strong> {user.userId || "Not available"} <br />
-        {user.image && <img src={user.image} alt="User" style={{ width: "80px", borderRadius: "50%", marginTop: "10px" }} />}
+        {user.image && 
+          <img 
+            src={user.image} 
+            alt="User" 
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
+            decoding="async"
+            style={{ width: "80px", borderRadius: "50%", marginTop: "10px" }} 
+        />}
       </div>
 
       <h3>My Projects</h3>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useFileStore } from "../store/fileStore"; 
 
-const FileExplorer = () => {
+export default function FileExplorerComponent() {
   
   const {
     fileTree,
@@ -126,5 +126,3 @@ const FileExplorer = () => {
     </div>
   );
 };
-
-export default FileExplorer;

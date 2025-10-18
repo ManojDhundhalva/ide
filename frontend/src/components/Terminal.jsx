@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
-import { Terminal } from "xterm";
+import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
 import config from "../config"

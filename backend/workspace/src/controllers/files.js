@@ -24,14 +24,23 @@ export const getFiles = async (req, res) => {
     try {
         const dirents = await fs.readdir(targetPath, { withFileTypes: true });
 
-        const entries = dirents.map((d) => {
-            let type = "other";
-            if (d.isDirectory()) type = "directory";
-            else if (d.isFile()) type = "file";
-            else if (d.isSymbolicLink()) type = "symbolicLink";
+        const entries = dirents
+            .map((d) => {
+                let type = "other";
+                if (d.isDirectory()) type = "directory";
+                else if (d.isFile()) type = "file";
+                else if (d.isSymbolicLink()) type = "symbolicLink";
 
-            return { name: d.name, type };
-        });
+                return { name: d.name, type };
+            })
+            .sort((a, b) => {
+                // Step 1: Directories first
+                if (a.type === "directory" && b.type !== "directory") return -1;
+                if (a.type !== "directory" && b.type === "directory") return 1;
+
+                // Step 2: Sort alphabetically (case-insensitive)
+                return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+            });
         
         return res.status(200).json({ message: "Directory listing retrieved", path: requested, entries });
 
@@ -66,7 +75,6 @@ export const getFileContent = async (req, res) => {
         return res.status(500).json({ message: "Failed to read file", path: requested });
     }
 };
-
 
 
 /*

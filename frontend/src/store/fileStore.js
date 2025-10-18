@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import api from "../config/api";
+import { apiWS } from "../config/api";
 
 export const useFileStore = create((set) => ({ 
 
@@ -15,9 +15,13 @@ export const useFileStore = create((set) => ({
         try {
             set({ getFilesLoading: true, getFilesError: null });
 
-            const { data } = await api.get(`/files?path=${path}`);
+            const { data } = await apiWS.get(`/files?path=${path}`);
 
-            fileTree.set(path, data.entries);
+            set((state) => {
+                const newFileTree = new Map(state.fileTree);
+                newFileTree.set(path, data.entries);
+                return { fileTree: newFileTree };
+            });
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || "Failed to fetch files and/or directories";
@@ -36,7 +40,7 @@ export const useFileStore = create((set) => ({
                 throw new Error("Path cannot be empty");
             }
 
-            const { data } = await api.get(`/file?path=${path}`);
+            const { data } = await apiWS.get(`/file?path=${path}`);
 
             return data.content;
 

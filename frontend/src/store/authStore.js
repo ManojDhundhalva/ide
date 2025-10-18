@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import api from "../config/api";
+import { api } from "../config/api";
 
 export const useAuthStore = create((set) => ({
     user: {

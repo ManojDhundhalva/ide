@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
-import pty from "node-pty";
+
 
 import config from "./config/index.js";
 import initIO from "./config/socket.js"
@@ -17,15 +17,7 @@ const server = http.createServer(app);
 
 const io = initIO(server);
 
-const ptyProcess = pty.spawn("bash", [], {
-  name: 'xterm-color',
-  cols: 80,
-  rows: 30,
-  cwd: process.env.INIT_CWD + "/user",
-  env: { ...process.env, TERM: "xterm-256color" }
-});
-
-socketHandlers(io, ptyProcess);
+socketHandlers(io);
 
 app.use(cors(corsConfig));
 app.use(express.json());

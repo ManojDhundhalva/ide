@@ -5,7 +5,7 @@ import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
 import config from "../config"
 
-const SOCKET_URL = config.SOCKET_URL;
+const SOCKET_URL = config.WORKSPACE_URL;
 
 export default function TerminalComponent() {
   const xtermRef = useRef(null);

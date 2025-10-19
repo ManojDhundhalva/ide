@@ -3,14 +3,13 @@ import { useFileStore } from "../store/fileStore";
 
 export default function FileExplorerComponent() {
   
-  const {
-    fileTree,
-    getFilesLoading,
-    getFilesError,
-    getFileContent,
-    getFileContentLoading,
-    getFiles
-  } = useFileStore();
+  const fileTree = useFileStore((s) => s.fileTree);
+  const getFilesLoading = useFileStore((s) => s.getFilesLoading);
+  const getFilesError = useFileStore((s) => s.getFilesError);
+  // const getFileContent = useFileStore((s) => s.getFileContent);
+  const getFileContentLoading = useFileStore((s) => s.getFileContentLoading);
+  const getFiles = useFileStore((s) => s.getFiles);
+  const setCurrentFilePath = useFileStore((s) => s.setCurrentFilePath);
 
   const [currentPath, setCurrentPath] = useState('');
   const [expandedFolders, setExpandedFolders] = useState(new Set());
@@ -42,13 +41,8 @@ export default function FileExplorerComponent() {
 
   const handleFileClick = async (filePath, fileName) => {
     const fullPath = filePath ? `${filePath}/${fileName}` : fileName;
-    try {
-      const content = await getFileContent(fullPath);
-      console.log(`Content of ${fileName}:`);
-      console.log(content);
-    } catch (error) {
-      console.error('Failed to get file content:', error);
-    }
+    setCurrentFilePath(fullPath);
+    
   };
 
   const renderFileTree = (path = '', level = 0) => {
@@ -59,15 +53,15 @@ export default function FileExplorerComponent() {
       const isExpanded = expandedFolders.has(fullPath);
       
       return (
-        <div key={fullPath} style={{ marginLeft: `${level * 20}px` }}>
+        <div key={fullPath} style={{ marginLeft: `${level * 10}px` }}>
           {entry.type === 'directory' ? (
             <div>
               <div
                 onClick={() => handleFolderClick(path, entry.name)}
                 style={{
                   cursor: 'pointer',
-                  padding: '5px',
-                  backgroundColor: isExpanded ? '#f0f0f0' : 'transparent',
+                  padding: '2px',
+                  backgroundColor: isExpanded ? '#000' : 'transparent',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px'
@@ -109,20 +103,14 @@ export default function FileExplorerComponent() {
   }
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px' }}>
-      <h2>File Explorer</h2>
-      
+    <div style={{ flex: 1, overflow: 'auto', fontFamily: 'Arial, sans-serif', padding: '8px' }}>
       {getFilesLoading && !fileTree.size && (
         <div>Loading files...</div>
       )}
       
-      <div style={{ border: '1px solid #ccc', padding: '10px', minHeight: '200px' }}>
+      <div style={{ padding: '10px', height: "100%", width: "100%", backgroundColor: "rgba(50, 50, 50, 1)" }}>
         {renderFileTree()}
       </div>
-
-      {getFileContentLoading && (
-        <div style={{ marginTop: '10px' }}>Loading file content...</div>
-      )}
     </div>
   );
 };

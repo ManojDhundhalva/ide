@@ -1,61 +1,57 @@
 import { useEffect, useRef } from "react";
-import { io } from "socket.io-client";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
-import config from "../config"
 
-const SOCKET_URL = config.WORKSPACE_URL;
-
-export default function TerminalComponent() {
-  const xtermRef = useRef(null);
-  const socketRef = useRef(null);
-  const fitAddonRef = useRef(null);
+export default function TerminalComponent({ socket }) {
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    const term = new Terminal({ cursorBlink: true });
+    if (!containerRef.current || !socket) return;
+
+    const terminal = new Terminal({ cursorBlink: true, convertEol: true });
     const fitAddon = new FitAddon();
-    term.loadAddon(fitAddon);
-    term.open(document.getElementById("xterm-container"));
+
+    terminal.loadAddon(fitAddon);
+    terminal.open(containerRef.current);
     fitAddon.fit();
-    xtermRef.current = term;
-    fitAddonRef.current = fitAddon;
 
-    // connect socket
-    const socket = io(SOCKET_URL, { withCredentials: true });
-    socketRef.current = socket;
+    // Handle data from server
+    const handleRead = (data) => terminal.write(data);
 
-    // on pty output
-    socket.on("terminal:read", (data) => {
-      term.write(data);
-    });
-
-    // on connect error
-    socket.on("connect_error", (err) => {
-      console.error("Socket connect error:", err.message);
-      term.writeln(`\r\nError: ${err.message}`);
-    });
+    // Listen for data and connection errors
+    socket.on("terminal:read", handleRead);
 
     // Send user input to server
-    term.onData(data => {
-      socket.emit("terminal:write", data);
-    });
+    terminal.onData((data) => socket.emit("terminal:write", data));
 
-    // handle window resize
+    // Resize handler
     const handleResize = () => {
       fitAddon.fit();
-      socket.emit("resize", { cols: term.cols, rows: term.rows });
+      socket.emit("resize", { cols: terminal.cols, rows: terminal.rows });
     };
+
     window.addEventListener("resize", handleResize);
-    // initial resize
-    socket.emit("resize", { cols: term.cols, rows: term.rows });
+    handleResize(); // initial emit
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      socket.disconnect();
-      term.dispose();
+      socket.off("terminal:read", handleRead);
+      terminal.dispose();
     };
-  }, []);
+  }, [socket]);
 
-  return <div id="xterm-container" style={{ width: "100%", height: "400px", background: "#000" }} />;
+  return (
+    <div style={{ flex: 1, backgroundColor: "#000", padding: 0 }}>
+      <div
+        ref={containerRef}
+        id="xterm-container"
+        style={{
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#000",
+        }}
+      />
+    </div>
+  );
 }

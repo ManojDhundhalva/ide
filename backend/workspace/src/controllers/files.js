@@ -7,18 +7,15 @@ export const getFiles = async (req, res) => {
     const targetPath = path.join(config.BASE_DIR, requested);
 
     try {
-        await fs.access(targetPath);
-    } catch (err) {
-        return res.status(404).json({ message: "Path not found", path: requested });
-    }
-
-    try {
         const stats = await fs.stat(targetPath);
         if (!stats.isDirectory()) {
             return res.status(400).json({ message: "Requested path must start with a directory", path: requested });
         }
     } catch (err) {
-        return res.status(500).json({ message: "Failed to access path" });
+        if (err.code === 'ENOENT') {
+            return res.status(404).json({ message: "Path not found", path: requested });
+        }
+        return res.status(500).json({ message: "Failed to access path", path: requested });
     }
 
     try {
@@ -49,15 +46,15 @@ export const getFiles = async (req, res) => {
     }
 };
 
+/*
+
+Note: here i implemented only plain text files retrival, then try media also. 
+
+*/
+
 export const getFileContent = async (req, res) => {
     const requested = req.query.path || ".";
     const targetPath = path.join(config.BASE_DIR, requested);
-
-    try {
-        await fs.access(targetPath);
-    } catch (err) {
-        return res.status(404).json({ message: "Path not found", path: requested });
-    }
 
     try {
         const stats = await fs.stat(targetPath);
@@ -65,6 +62,9 @@ export const getFileContent = async (req, res) => {
             return res.status(400).json({ message: "Requested path is not a file", path: requested });
         }
     } catch (err) {
+        if (err.code === 'ENOENT') {
+            return res.status(404).json({ message: "Path not found", path: requested });
+        }
         return res.status(500).json({ message: "Failed to access path", path: requested });
     }
 
@@ -77,8 +77,34 @@ export const getFileContent = async (req, res) => {
 };
 
 
-/*
+export const saveFileContent = async (req, res) => {
+    const requested = req.query.path;
+    const { content } = req.body;
+    const targetPath = path.join(config.BASE_DIR, requested);
 
-Note: here i implemented only plain text files retrival, then try media also. 
+    console.log(requested);
+    console.log(targetPath);
 
-*/
+    if (!requested || !content) {
+        return res.status(400).json({ message: "Path and content are required." });
+    }
+
+    try {
+        const stats = await fs.stat(targetPath);
+        if (!stats.isFile()) {
+            return res.status(400).json({ message: "Requested path is not a file", path: requested });
+        }
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            return res.status(404).json({ message: "Path not found", path: requested });
+        }
+        return res.status(500).json({ message: "Failed to access path", path: requested });
+    }
+
+    try {
+        await fs.writeFile(targetPath, content, 'utf8');
+        return res.status(200).json({ message: "File saved successfully", path: requested });
+    } catch (err) {
+        return res.status(500).json({ message: "Failed to write file", path: requested });
+    }
+};

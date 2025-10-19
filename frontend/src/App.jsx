@@ -8,6 +8,8 @@ import WorkspacePage from "./pages/WorkspacePage";
 import PageNotFound from "./pages/PageNotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import "./css/App.css";
+
 const GoogleAuthWrapper = () => {
   return (
     <GoogleOAuthProvider clientId={config.GOOGLE_CLIENT_ID}>

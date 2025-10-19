@@ -1,17 +1,63 @@
+import { useState, useEffect, useCallback, useRef } from "react";
 import Editor from '@monaco-editor/react';
+import { useFileStore } from '../store/fileStore';
+import debounce from "lodash.debounce";
 
 export default function CodeEditorComponent() {
+    const currentFilePath = useFileStore((s) => s.currentFilePath);
+    const getFileContent = useFileStore((s) => s.getFileContent);
+    const saveFileContentToDB = useFileStore((s) => s.saveFileContentToDB);
 
-    function handleEditorChange(value, event) {
-        console.log('here is the current model value:', value, event);
-    }
+    const [editorValue, setEditorValue] = useState("");
+
+    useEffect(() => {
+        if (!currentFilePath) {
+            setEditorValue("");
+            return;
+        }
+
+        const fetchContent = async () => {
+            const content = await getFileContent(currentFilePath);
+            setEditorValue(content || "");
+        };
+
+        fetchContent();
+    }, [currentFilePath, getFileContent]);
+
+    const saveToDB = useCallback((content) => {
+        saveFileContentToDB(content).catch(console.error);
+    }, [saveFileContentToDB]);
+
+    const debouncedSave = useRef(debounce((content) => {
+        saveToDB(content);
+    }, 1000)).current;
+
+    useEffect(() => {
+        return () => {
+            debouncedSave.cancel();
+        };
+    }, [debouncedSave]);
+
+    // Handle editor changes and call debounced save
+    const handleEditorChange = (value, event) => {
+        setEditorValue(value);
+        debouncedSave(value);
+    };
 
     return (
-        <Editor
-            height="50vh"
-            defaultLanguage="javascript"
-            defaultValue="// some comment"
-            onChange={handleEditorChange}
-        />
+        <div style={{ flex: 1, background: '#1e1e1e' }}>
+            <Editor
+                height="100%"
+                language="javascript"
+                theme="vs-dark"
+                value={editorValue}
+                onChange={handleEditorChange}
+                options={{
+                minimap: { enabled: true },
+                fontSize: 14,
+                wordWrap: 'on',
+                }}
+            />
+        </div>
     );
 }

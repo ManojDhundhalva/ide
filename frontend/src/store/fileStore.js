@@ -5,13 +5,10 @@ export const useFileStore = create((set, get) => ({
 
     tabs: [],
 
-    currentFilePath: null,
-
-    setCurrentFilePath: (path = null) => {
-        set(() => ({ currentFilePath: path }));
-    },
-
     fileTree: new Map(),
+
+    initFilesLoading: false,
+    initFilesError: null,
     
     getFilesLoading: false,
     getFilesError: null,
@@ -21,6 +18,35 @@ export const useFileStore = create((set, get) => ({
 
     saveFileContentToDBLoading: false,
     saveFileContentToDBError: null,
+
+    handleRefreshFileExplorer: (data) => {
+        
+    },
+
+    initFiles: async () => {
+        try {
+            set({ initFilesLoading: true, initFilesError: null });
+
+            const { data } = await apiWS.get("/files/init");
+
+            set((state) => {
+                const newFileTree = new Map(state.fileTree);
+            
+                data.init.forEach((data) => {
+                    newFileTree.set(data.path, data.entries);
+                });
+            
+                return { fileTree: newFileTree };
+            });
+
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message || "Failed to fetch init files and directories";
+            set({ initFilesError: errorMsg });
+            console.error("initFiles Error:", errorMsg);
+        }  finally {
+            set({ initFilesLoading: false });
+        }
+    },
 
     getFiles: async (path = "") => {
         try {

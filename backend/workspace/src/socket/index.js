@@ -1,5 +1,8 @@
+import fs from 'fs';
 import pty from "node-pty";
 import config from "../config/index.js";
+import { saveExpandDirectoriesToDB } from "../services/fileServices.js";
+import { redisGet, redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
 
 const spawnTerminal = () => {
     const ptyProcess = pty.spawn("bash", [], {
@@ -12,9 +15,35 @@ const spawnTerminal = () => {
     return ptyProcess;
 };
 
+// function to watch file changes and emit socket events
+const watchFileSystem = (socket) => {
+    const watcher = fs.watch(config.BASE_DIR, { recursive: true }, (eventType, filePath) => {
+        if (!filePath) return;
+
+        socket.emit("fs:changed", { path: filePath });
+        
+        console.log(`FS change detected: ${eventType} on ${filePath}`);
+    });
+
+    process.on("exit", () => watcher.close());
+};
+
 const socketHandlers = (io) => {
-    io.on("connection", (socket) => {
+    io.on("connection", async (socket) => {
         console.log(`New client connected: ${socket.id}`);
+
+        const { projectId } = socket.handshake.auth;
+
+        if (!projectId) {
+            console.error('No projectId provided during socket connection');
+            socket.disconnect();
+            return;
+        }
+
+        await redisSet("user:cookie", socket.handshake.headers?.cookie || "");
+        await redisSet("user:projectId", projectId);
+
+        watchFileSystem(socket);
 
         let ptyProcess = spawnTerminal();
 
@@ -37,7 +66,6 @@ const socketHandlers = (io) => {
 
         attachHandlers(ptyProcess);
 
-        // Write data from client to pty
         socket.on("terminal:write", (data) => {
             if (ptyProcess) ptyProcess.write(data);
         });
@@ -48,7 +76,18 @@ const socketHandlers = (io) => {
             }
         });
 
-        socket.on("disconnect", (reason) => {
+        socket.on("file-explorer:expand-folder", async ({ path }) => {
+            await redisSetAdd("file-explorer", path);
+        });
+
+        socket.on("file-explorer:collapse-folder", async ({ path }) => {
+            await redisSetRemove("file-explorer", path);
+        });
+
+        socket.on("disconnect", async (reason) => {
+            const cookie = await redisGet("user:cookie");
+            const projectId = await redisGet("user:projectId");
+            // await saveExpandDirectoriesToDB(projectId, cookie);
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             try { ptyProcess.kill(); } catch (e) {}
         });

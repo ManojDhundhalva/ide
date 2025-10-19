@@ -1,20 +1,51 @@
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+
+import { useSocket } from "../hooks/useSocket";
+
+import { useFileStore } from "../store/fileStore";
+import { useProjectStore } from "../store/projectStore";
+
 import TerminalComponent from "../components/Terminal";
 import FileExplorerComponent from "../components/FileExplorer";
 import CodeEditorComponent from "../components/CodeEditor";
+
 import "../css/WorkspacePage.css";
-import { useSocket } from "../hooks/useSocket";
-import { useFileStore } from "../store/fileStore";
 
 const WorkspacePage = () => {
-  const { id } = useParams();
+  const { id: projectId } = useParams();
+  const navigate = useNavigate();
+  
+  const socket = useSocket({ projectId });
+
   const getFileContentLoading = useFileStore((s) => s.getFileContentLoading);
-  const currentFilePath = useFileStore((s) => s.currentFilePath);
+  const getProject = useProjectStore((s) => s.getProject);
 
-  const breadcrumbPath = currentFilePath ? currentFilePath.split('/').join(' / ') : '';
+  const [project, setProject] = useState({});
+  const [currentFilePath, setCurrentFilePath] = useState("");
 
-  const socket = useSocket();
+  useEffect(() => {
+    const fetchProject = async () => {
+        const data = await getProject(projectId);
+
+        if(!data) navigate("/");
+
+        console.log(data);
+
+        setProject((prev) => ({
+          projectId: data._id ?? null,
+          projectName: data.projectName ?? null,
+          description: data.description ?? null,
+          updatedAt: data.updatedAt ?? null,
+          createdAt: data.createdAt ?? null,
+          metadata: data.metadata ?? null
+        }));
+    };
+
+    fetchProject();
+
+  }, [getProject, projectId]);
 
   return (
     <div className="workspace-container">
@@ -30,7 +61,7 @@ const WorkspacePage = () => {
             <div className="panel-header">
               <h3>Explorer</h3>
             </div>
-            <FileExplorerComponent />
+            <FileExplorerComponent socket={socket} project={project} setCurrentFilePath={setCurrentFilePath}/>
           </div>
         </Panel>
 
@@ -44,9 +75,9 @@ const WorkspacePage = () => {
               <div className="panel-content">
                 <div className="panel-header">
                   <h3>Editor {getFileContentLoading ? "Loading..." : ""}
-                    {breadcrumbPath && 
+                    {currentFilePath && 
                     <span style={{ fontSize: '0.8rem', marginLeft: 10, color: '#aaa' }}>
-                      ({breadcrumbPath})
+                      ({currentFilePath})
                     </span>
                   }
                   </h3>
@@ -60,7 +91,7 @@ const WorkspacePage = () => {
             {/* Terminal Area */}
             <Panel 
               defaultSize={30} 
-              minSize={20} 
+              minSize={10} 
               maxSize={100}
               className="terminal-panel"
             >

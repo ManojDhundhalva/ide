@@ -67,6 +67,7 @@ export const authenticate = async (req, res) => {
     res.cookie("SESSION-TOKEN", user.sessionToken, { 
         domain: "localhost", 
         path: "/", 
+        // sameSite: "none",
         maxAge: 24 * 60 * 60 * 1000 
     });
 
@@ -90,8 +91,9 @@ export const logout = async(req, res) => {
 
         res.cookie("SESSION-TOKEN", "", { 
             domain: "localhost", 
+            path: "/", 
+            // sameSite: "none",
             expires: new Date(0), 
-            path: "/" 
         });
     }
 

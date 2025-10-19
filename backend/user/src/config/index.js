@@ -9,6 +9,7 @@ const config = {
   PASSWORD_SECRET: String(process.env.PASSWORD_SECRET),
   GOOGLE_CLIENT_ID: String(process.env.GOOGLE_CLIENT_ID),
   GOOGLE_CLIENT_SECRET: String(process.env.GOOGLE_CLIENT_SECRET),
+  WORKSPACE_URL: String(process.env.WORKSPACE_URL),
   CLIENT_URL: String(process.env.CLIENT_URL)
 };
 

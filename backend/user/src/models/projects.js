@@ -11,6 +11,13 @@ const projectSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        metadata: {
+            expandedDirectories: {
+                type: [String],
+                default: [],
+                select: false
+            },
+        },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

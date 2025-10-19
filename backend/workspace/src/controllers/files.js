@@ -1,6 +1,31 @@
 import path from "path";
 import fs from "fs/promises";
 import config from "../config/index.js";
+import { redisGet } from "../services/redisService.js";
+import { getExpandDirectories } from "../services/fileServices.js";
+import { getDirectoryEntries } from "../utils/files.js"
+
+export const initFiles = async (req, res) => {
+    try {
+        const cookie = await redisGet("user:cookie");
+        const projectId = await redisGet("user:projectId");
+
+        const expandedDirectories = await getExpandDirectories(projectId, cookie);
+        
+        // Use Promise.all to wait for all async operations to complete
+        const init = await Promise.all(
+            expandedDirectories.map(async (dirPath) => {
+                const entries = await getDirectoryEntries(dirPath);
+                return { path: dirPath, entries };
+            })
+        );
+
+        return res.status(200).json({ message: "Successfully fetched expanded directories", init }); 
+    } catch (error) {
+        console.error("Error in initFiles:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
 
 export const getFiles = async (req, res) => {
     const requested = req.query.path || "";
@@ -19,26 +44,7 @@ export const getFiles = async (req, res) => {
     }
 
     try {
-        const dirents = await fs.readdir(targetPath, { withFileTypes: true });
-
-        const entries = dirents
-            .map((d) => {
-                let type = "other";
-                if (d.isDirectory()) type = "directory";
-                else if (d.isFile()) type = "file";
-                else if (d.isSymbolicLink()) type = "symbolicLink";
-
-                return { name: d.name, type };
-            })
-            .sort((a, b) => {
-                // Step 1: Directories first
-                if (a.type === "directory" && b.type !== "directory") return -1;
-                if (a.type !== "directory" && b.type === "directory") return 1;
-
-                // Step 2: Sort alphabetically (case-insensitive)
-                return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-            });
-        
+        const entries = await getDirectoryEntries(requested);
         return res.status(200).json({ message: "Directory listing retrieved", path: requested, entries });
 
     } catch (err) {

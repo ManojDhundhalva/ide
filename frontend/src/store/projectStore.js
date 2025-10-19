@@ -4,6 +4,9 @@ import { api } from "../config/api";
 export const useProjectStore = create((set) => ({ 
     
     projects: [],
+
+    getProjectLoading: false,
+    getProjectError: null,
     
     getAllProjectsLoading: false,
     getAllProjectsError: null,
@@ -16,6 +19,24 @@ export const useProjectStore = create((set) => ({
 
     deleteProjectLoading: false,
     deleteProjectError: null,
+
+    getProject: async (projectId) => {
+        try {
+            set({ getProjectLoading: true, getProjectError: null });
+
+            const { data } = await api.get(`/project/${projectId}`);
+
+            return data.project;
+
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message || `Failed to fetch project of id: ${projectId}`;
+            set({ getProject: errorMsg });
+            console.error("getProject Error:", errorMsg);
+            return null;
+        } finally {
+            set({ getProjectLoading: false });
+        }
+    },
 
     getAllProjects: async () => {
         try {

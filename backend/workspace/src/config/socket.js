@@ -5,7 +5,7 @@ const initIO = (server) => {
     const io = new Server(server, {
         cors: {
             origin: config.CLIENT_URL,
-            methods: ['GET', 'POST'],
+            methods: ['GET', 'POST', 'PUT', 'DELETE'],
             credentials: true,
         }
     });

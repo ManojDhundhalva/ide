@@ -1,7 +1,7 @@
 import { ProjectModel } from "../models/projects.js";
 import { UserModel } from "../models/users.js";
 
-export const getProjectByProjectId = (projectId) => ProjectModel.findById(projectId).select('projectName description updatedAt createdAt +metadata.expandedDirectories').lean();
+export const getProjectByProjectId = (projectId) => ProjectModel.findById(projectId).select('userId projectName description updatedAt createdAt +metadata.expandedDirectories').lean();
 
 export const getUserIdByProjectId = (projectId) => ProjectModel.findById(projectId, { userId: 1, _id: 0 });
 

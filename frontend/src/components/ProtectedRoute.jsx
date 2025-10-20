@@ -7,6 +7,7 @@ const ProtectedRoute = ({ Component }) => {
     const navigate = useNavigate();
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const fetchUser = useAuthStore((s) => s.fetchUser);
+    const user = useAuthStore((s) => s.user);
 
     useEffect(() => {
         const authenticateUser = () => {
@@ -33,7 +34,7 @@ const ProtectedRoute = ({ Component }) => {
     return (
         <>
             {!isOnline && <h2><b>You are offline</b></h2>}
-            <div><Component /></div>
+            {user.userId ? <div><Component /></div> : <h1>Loading...</h1>}
         </>
     )
 }

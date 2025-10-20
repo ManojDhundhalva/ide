@@ -6,6 +6,7 @@ import { useSocket } from "../hooks/useSocket";
 
 import { useFileStore } from "../store/fileStore";
 import { useProjectStore } from "../store/projectStore";
+import { useAuthStore } from "../store/authStore";
 
 import TerminalComponent from "../components/Terminal";
 import FileExplorerComponent from "../components/FileExplorer";
@@ -16,11 +17,12 @@ import "../css/WorkspacePage.css";
 const WorkspacePage = () => {
   const { id: projectId } = useParams();
   const navigate = useNavigate();
-  
-  const socket = useSocket({ projectId });
 
+  const userId = useAuthStore((s) => s.user.userId);
   const getFileContentLoading = useFileStore((s) => s.getFileContentLoading);
   const getProject = useProjectStore((s) => s.getProject);
+  
+  const socket = useSocket({ projectId });
 
   const [project, setProject] = useState({});
   const [currentFilePath, setCurrentFilePath] = useState("");

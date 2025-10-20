@@ -1,7 +1,5 @@
-import path from "path";
 import fs from "fs/promises";
-import config from "../config/index.js";
-import { getDirectoryEntries, handleRefreshFileExplorer } from "../utils/files.js"
+import { getDirectoryEntries, handleRefreshFileExplorer, getFullPath } from "../utils/files.js"
 
 export const initFiles = async (req, res) => {
     try {
@@ -15,7 +13,7 @@ export const initFiles = async (req, res) => {
 
 export const getFiles = async (req, res) => {
     const requested = req.query.path || "";
-    const targetPath = path.join(config.BASE_DIR, requested);
+    const targetPath = await getFullPath(requested);
 
     try {
         const stats = await fs.stat(targetPath);
@@ -46,7 +44,7 @@ Note: here i implemented only plain text files retrival, then try media also.
 
 export const getFileContent = async (req, res) => {
     const requested = req.query.path || ".";
-    const targetPath = path.join(config.BASE_DIR, requested);
+    const targetPath = await getFullPath(requested);
 
     try {
         const stats = await fs.stat(targetPath);
@@ -72,10 +70,7 @@ export const getFileContent = async (req, res) => {
 export const saveFileContent = async (req, res) => {
     const requested = req.query.path;
     const { content } = req.body;
-    const targetPath = path.join(config.BASE_DIR, requested);
-
-    console.log(requested);
-    console.log(targetPath);
+    const targetPath = await getFullPath(requested);
 
     if (!requested || !content) {
         return res.status(400).json({ message: "Path and content are required." });

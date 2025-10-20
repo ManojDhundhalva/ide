@@ -1,23 +1,24 @@
-import fs from 'fs';
+import fs from "fs";
 import pty from "node-pty";
-import config from "../config/index.js";
 import { saveExpandDirectoriesToDB } from "../services/fileServices.js";
-import { redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
+import { redisGet, redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
 import { handleRefreshFileExplorer } from "../utils/files.js";
+import { getProject } from "../services/projectService.js";
 
-const spawnTerminal = () => {
+const spawnTerminal = async () => {
+    const baseDir = await redisGet("project:base-dir");
     const ptyProcess = pty.spawn("bash", [], {
         name: 'xterm-color',
         cols: 80,
         rows: 30,
-        cwd: config.BASE_DIR,
+        cwd: baseDir,
         env: { ...process.env, TERM: "xterm-256color" }
     });
     return ptyProcess;
 };
 
 // function to watch file changes and emit socket events
-const watchFileSystem = (socket) => {
+const watchFileSystem = async (socket) => {
     let timeoutId = null;
     let isProcessing = false;
     
@@ -46,7 +47,9 @@ const watchFileSystem = (socket) => {
         }, DEBOUNCE_DELAY);
     };
 
-    const watcher = fs.watch(config.BASE_DIR, { recursive: true }, async (eventType, filePath) => {
+    const baseDir = await redisGet("project:base-dir");
+
+    const watcher = fs.watch(baseDir, { recursive: true }, async (eventType, filePath) => {
         if (!filePath) return;
         
         // Use the debounced function instead of direct call
@@ -74,6 +77,8 @@ const socketHandlers = (io) => {
     io.on("connection", async (socket) => {
         console.log(`New client connected: ${socket.id}`);
 
+        await redisSet("user:cookie", socket.handshake.headers?.cookie || "");
+
         const { projectId } = socket.handshake.auth;
 
         if (!projectId) {
@@ -82,12 +87,17 @@ const socketHandlers = (io) => {
             return;
         }
 
-        await redisSet("user:cookie", socket.handshake.headers?.cookie || "");
-        await redisSet("user:projectId", projectId);
+        const isProjectExist = await getProject(projectId);
+
+        if (!isProjectExist) {
+            console.error('Invalid projectId', projectId);
+            socket.disconnect();
+            return;
+        }
 
         watchFileSystem(socket);
 
-        let ptyProcess = spawnTerminal();
+        let ptyProcess = await spawnTerminal();
 
         const attachHandlers = (ptyProc) => {
             // Forward data from pty to client
@@ -96,9 +106,9 @@ const socketHandlers = (io) => {
             });
 
             // Handle terminal exit
-            ptyProc.onExit(({ exitCode, signal }) => {
+            ptyProc.onExit(async ({ exitCode, signal }) => {
                 console.log(`Terminal exited for ${socket.id}. Respawning...`);
-                ptyProcess = spawnTerminal();
+                ptyProcess = await spawnTerminal();
                 attachHandlers(ptyProcess);
 
                 // Notify client
@@ -128,6 +138,7 @@ const socketHandlers = (io) => {
 
         socket.on("disconnect", async (reason) => {
             await saveExpandDirectoriesToDB();
+            // await saveWorkDirToCloud();
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             try { ptyProcess.kill(); } catch (e) {}
         });

@@ -9,7 +9,11 @@ export default function TerminalComponent({ socket }) {
   useEffect(() => {
     if (!containerRef.current || !socket) return;
 
-    const terminal = new Terminal({ cursorBlink: true, convertEol: true });
+    const terminal = new Terminal({ 
+      fontFamily: '"Ubuntu Mono"', 
+      cursorBlink: true, 
+      convertEol: true 
+    });
     const fitAddon = new FitAddon();
 
     terminal.loadAddon(fitAddon);

@@ -1,12 +1,13 @@
 import fs from "fs/promises";
 import path from "path";
 import config from "../config/index.js";
-import { getExpandDirectories } from "../services/fileServices.js";
+import { redisGet, redisSet, redisSetGetAll } from "../services/redisService.js";
 
-export const getDirectoryEntries = async (requested = "") => {
-    const targetPath = path.join(config.BASE_DIR, requested);
+export const getDirectoryEntries = async (requested = null) => {
+    const targetPath = await getFullPath(requested);
 
-    const isExist = await isPathExists(targetPath); 
+    const isExist = await isPathExists(targetPath);
+
     if (!isExist) return null; 
 
     const dirents = await fs.readdir(targetPath, { withFileTypes: true });
@@ -41,8 +42,21 @@ export const isPathExists = async (path = "") => {
     }
 };
 
+export const getFullPath = async (requested = null) => {
+    const baseDir = await redisGet("project:base-dir");
+    if(!requested) return baseDir;
+    const targetPath = path.join(baseDir, requested);
+    return targetPath;
+};
+
+export const createFolderToBaseDir = async (projectName) => {
+    const targetPath = path.join(config.BASE_PATH, projectName);
+    await redisSet("project:base-dir", targetPath);
+    await fs.mkdir(targetPath, { recursive: true });
+}
+
 export const handleRefreshFileExplorer = async () => {
-    const expandedDirectories = await getExpandDirectories();
+    const expandedDirectories = await redisSetGetAll("file-explorer-expanded");
 
     const init = await Promise.all(
         expandedDirectories?.map(async (dirPath) => {

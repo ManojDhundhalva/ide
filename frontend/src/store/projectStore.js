@@ -30,7 +30,7 @@ export const useProjectStore = create((set) => ({
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || `Failed to fetch project of id: ${projectId}`;
-            set({ getProject: errorMsg });
+            set({ getProjectError: errorMsg });
             console.error("getProject Error:", errorMsg);
             return null;
         } finally {

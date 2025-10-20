@@ -2,7 +2,8 @@ import fs from 'fs';
 import pty from "node-pty";
 import config from "../config/index.js";
 import { saveExpandDirectoriesToDB } from "../services/fileServices.js";
-import { redisGet, redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
+import { redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
+import { handleRefreshFileExplorer } from "../utils/files.js";
 
 const spawnTerminal = () => {
     const ptyProcess = pty.spawn("bash", [], {
@@ -17,15 +18,56 @@ const spawnTerminal = () => {
 
 // function to watch file changes and emit socket events
 const watchFileSystem = (socket) => {
-    const watcher = fs.watch(config.BASE_DIR, { recursive: true }, (eventType, filePath) => {
-        if (!filePath) return;
-
-        socket.emit("fs:changed", { path: filePath });
+    let timeoutId = null;
+    let isProcessing = false;
+    
+    // Debounce delay in milliseconds (adjust as needed)
+    const DEBOUNCE_DELAY = 300; // 300ms
+    
+    const debouncedRefresh = async () => {
+        // Clear any existing timeout
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
         
-        console.log(`FS change detected: ${eventType} on ${filePath}`);
+        // Set new timeout
+        timeoutId = setTimeout(async () => {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            try {
+                const data = await handleRefreshFileExplorer();
+                socket.emit("file-explorer:refresh", { data });
+            } catch (error) {
+                console.error('Error refreshing file explorer:', error);
+            } finally {
+                isProcessing = false;
+            }
+        }, DEBOUNCE_DELAY);
+    };
+
+    const watcher = fs.watch(config.BASE_DIR, { recursive: true }, async (eventType, filePath) => {
+        if (!filePath) return;
+        
+        // Use the debounced function instead of direct call
+        debouncedRefresh();
     });
 
-    process.on("exit", () => watcher.close());
+    // Cleanup function
+    const cleanup = () => {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+        watcher.close();
+    };
+
+    process.on("exit", cleanup);
+    
+    // Optional: Also clean up on other events
+    process.on("SIGINT", cleanup);
+    process.on("SIGTERM", cleanup);
+    
+    return cleanup; // Return cleanup function if you need to call it manually
 };
 
 const socketHandlers = (io) => {
@@ -77,17 +119,15 @@ const socketHandlers = (io) => {
         });
 
         socket.on("file-explorer:expand-folder", async ({ path }) => {
-            await redisSetAdd("file-explorer", path);
+            await redisSetAdd("file-explorer-expanded", path);
         });
 
         socket.on("file-explorer:collapse-folder", async ({ path }) => {
-            await redisSetRemove("file-explorer", path);
+            await redisSetRemove("file-explorer-expanded", path);
         });
 
         socket.on("disconnect", async (reason) => {
-            const cookie = await redisGet("user:cookie");
-            const projectId = await redisGet("user:projectId");
-            // await saveExpandDirectoriesToDB(projectId, cookie);
+            await saveExpandDirectoriesToDB();
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             try { ptyProcess.kill(); } catch (e) {}
         });

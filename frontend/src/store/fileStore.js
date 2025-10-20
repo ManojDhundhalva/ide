@@ -1,9 +1,15 @@
 import { create } from "zustand";
-import { apiWS } from "../config/api";
+import { api, apiWS } from "../config/api";
 
 export const useFileStore = create((set, get) => ({
 
     tabs: [],
+
+    currentFilePath: null,
+
+    setCurrentFilePath: (path = null) => {
+        set(() => ({ currentFilePath: path }));
+    },
 
     fileTree: new Map(),
 
@@ -19,8 +25,19 @@ export const useFileStore = create((set, get) => ({
     saveFileContentToDBLoading: false,
     saveFileContentToDBError: null,
 
+    getExpandedDirectoriesLoading: false,
+    getExpandedDirectoriesError: null,
+
     handleRefreshFileExplorer: (data) => {
+        set((state) => {
+            const newFileTree = new Map(state.fileTree);
         
+            data.data.forEach((data) => {
+                newFileTree.set(data.path, data.entries);
+            });
+        
+            return { fileTree: newFileTree };
+        });
     },
 
     initFiles: async () => {
@@ -32,8 +49,8 @@ export const useFileStore = create((set, get) => ({
             set((state) => {
                 const newFileTree = new Map(state.fileTree);
             
-                data.init.forEach((data) => {
-                    newFileTree.set(data.path, data.entries);
+                data?.init?.forEach((data) => {
+                    newFileTree?.set(data?.path, data?.entries);
                 });
             
                 return { fileTree: newFileTree };
@@ -96,6 +113,7 @@ export const useFileStore = create((set, get) => ({
             set({ saveFileContentToDBLoading: true, saveFileContentToDBError: null });
 
             const currentFilePath = get().currentFilePath;
+
             if (!currentFilePath) return;
 
             await apiWS.put(`/file?path=${currentFilePath}`, { content });
@@ -106,6 +124,24 @@ export const useFileStore = create((set, get) => ({
             console.error("SaveFileContentToDB Error:", errorMsg);
         }  finally {
             set({ saveFileContentToDBLoading: false });
+        }
+    },
+
+    getExpandedDirectories: async (projectId) => {
+        try {
+            set({ getExpandedDirectoriesLoading: true, getExpandedDirectoriesError: null });
+
+            const { data } = await api.get(`/project/metadata/${projectId}`);
+
+            return data.expandedDirectories;
+
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message || `Failed to fetch expanded directories`;
+            set({ getExpandedDirectoriesError: errorMsg });
+            console.error("getExpandedDirectories Error:", errorMsg);
+            return null;
+        } finally {
+            set({ getExpandedDirectoriesLoading: false });
         }
     },
 

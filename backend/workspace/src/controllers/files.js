@@ -1,25 +1,11 @@
 import path from "path";
 import fs from "fs/promises";
 import config from "../config/index.js";
-import { redisGet } from "../services/redisService.js";
-import { getExpandDirectories } from "../services/fileServices.js";
-import { getDirectoryEntries } from "../utils/files.js"
+import { getDirectoryEntries, handleRefreshFileExplorer } from "../utils/files.js"
 
 export const initFiles = async (req, res) => {
     try {
-        const cookie = await redisGet("user:cookie");
-        const projectId = await redisGet("user:projectId");
-
-        const expandedDirectories = await getExpandDirectories(projectId, cookie);
-        
-        // Use Promise.all to wait for all async operations to complete
-        const init = await Promise.all(
-            expandedDirectories.map(async (dirPath) => {
-                const entries = await getDirectoryEntries(dirPath);
-                return { path: dirPath, entries };
-            })
-        );
-
+        const init = await handleRefreshFileExplorer();
         return res.status(200).json({ message: "Successfully fetched expanded directories", init }); 
     } catch (error) {
         console.error("Error in initFiles:", error);

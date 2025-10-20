@@ -31,8 +31,6 @@ const WorkspacePage = () => {
 
         if(!data) navigate("/");
 
-        console.log(data);
-
         setProject((prev) => ({
           projectId: data._id ?? null,
           projectName: data.projectName ?? null,

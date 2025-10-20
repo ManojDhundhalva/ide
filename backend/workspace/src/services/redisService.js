@@ -19,7 +19,13 @@ export const redisDel = async (key) => {
 };
 
 export const redisSetAdd = async (setName, value) => {
+    if (!value) return;
     await redisClient.sAdd(setName, value);
+};
+
+export const redisSetAddAll = async (setName, values) => {
+    if (!values || !Array.isArray(values) || values.length === 0) return;
+    await redisClient.sAdd(setName, ...values);
 };
 
 export const redisSetExists = async (setName, value) => {
@@ -33,5 +39,10 @@ export const redisSetRemove = async (setName, value) => {
 
 export const redisSetGetAll = async (setName) => {
     const members = await redisClient.sMembers(setName);
-    return members;
+    return Array.isArray(members) ? members : [];
+};
+
+export const redisSetExistsByName = async (setName) => {
+    const exists = await redisClient.exists(setName);
+    return exists === 1;
 };

@@ -2,11 +2,11 @@ import { getProject, createProject, getAllProjectsOfUser, updateProject, deleteP
 import { isAuthenticated, isOwner } from "../middleware/index.js";
 
 export default (router) => {
-    router.get("/project/:id", isAuthenticated, isOwner, getProject);
+    router.get("/project/:projectId", isAuthenticated, isOwner, getProject);
     router.post("/project", isAuthenticated, createProject);
     router.get("/project", isAuthenticated, getAllProjectsOfUser);
-    router.put("/project/:id", isAuthenticated, isOwner, updateProject);
-    router.delete("/project/:id", isAuthenticated, isOwner, deleteProject);
-    router.get("/project/metadata/:id", isAuthenticated, isOwner, getExpandedDirectories);
-    router.put("/project/metadata/:id", isAuthenticated, isOwner, updateExpandedDirectories);
+    router.put("/project/:projectId", isAuthenticated, isOwner, updateProject);
+    router.delete("/project/:projectId", isAuthenticated, isOwner, deleteProject);
+    router.get("/project/metadata/:projectId", isAuthenticated, isOwner, getExpandedDirectories);
+    router.put("/project/metadata/:projectId", isAuthenticated, isOwner, updateExpandedDirectories);
 }

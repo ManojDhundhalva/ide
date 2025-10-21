@@ -2,7 +2,7 @@ import fs from "fs";
 import pty from "node-pty";
 import { saveExpandDirectoriesToDB } from "../services/fileServices.js";
 import { redisGet, redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
-import { handleRefreshFileExplorer } from "../utils/files.js";
+import { handleRefreshFileExplorer, initializeWorkingDirectory, saveWorkingDirectoryToCloud } from "../utils/files.js";
 import { getProject } from "../services/projectService.js";
 
 const spawnTerminal = async () => {
@@ -95,7 +95,9 @@ const socketHandlers = (io) => {
             return;
         }
 
-        watchFileSystem(socket);
+        initializeWorkingDirectory();
+
+        await watchFileSystem(socket);
 
         let ptyProcess = await spawnTerminal();
 
@@ -138,7 +140,7 @@ const socketHandlers = (io) => {
 
         socket.on("disconnect", async (reason) => {
             await saveExpandDirectoriesToDB();
-            // await saveWorkDirToCloud();
+            await saveWorkingDirectoryToCloud();
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             try { ptyProcess.kill(); } catch (e) {}
         });

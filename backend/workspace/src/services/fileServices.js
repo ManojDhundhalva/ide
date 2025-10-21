@@ -5,7 +5,7 @@ export const saveExpandDirectoriesToDB = async () => {
     try {
         const expandedDirectories = await redisSetGetAll("file-explorer-expanded");
         const cookie = await redisGet("user:cookie");
-        const { projectId } = await redisGet("user:project:projectId");
+        const projectId = await redisGet("user:project:projectId");
 
         if (!projectId) {
             console.error("saveExpandDirectoriesToDB: missing projectId — skipping save");

@@ -8,7 +8,7 @@ import { redisGet, redisSet } from "../services/redisService.js";
 
 export const isOwner = async (req, res, next) => {
     try {
-        const { id: projectId } = req.params;
+        const { projectId } = req.params;
 
         const currentUserId = get(req, "identity._id", "");
 

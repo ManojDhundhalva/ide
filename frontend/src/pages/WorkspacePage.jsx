@@ -6,7 +6,6 @@ import { useSocket } from "../hooks/useSocket";
 
 import { useFileStore } from "../store/fileStore";
 import { useProjectStore } from "../store/projectStore";
-import { useAuthStore } from "../store/authStore";
 
 import TerminalComponent from "../components/Terminal";
 import FileExplorerComponent from "../components/FileExplorer";
@@ -18,14 +17,13 @@ const WorkspacePage = () => {
   const { id: projectId } = useParams();
   const navigate = useNavigate();
 
-  const userId = useAuthStore((s) => s.user.userId);
+  const currentFilePath = useFileStore((s) => s.currentFilePath);
   const getFileContentLoading = useFileStore((s) => s.getFileContentLoading);
   const getProject = useProjectStore((s) => s.getProject);
   
   const socket = useSocket({ projectId });
 
   const [project, setProject] = useState({});
-  const [currentFilePath, setCurrentFilePath] = useState("");
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -61,7 +59,7 @@ const WorkspacePage = () => {
             <div className="panel-header">
               <h3>Explorer</h3>
             </div>
-            <FileExplorerComponent socket={socket} project={project} setCurrentFilePath={setCurrentFilePath}/>
+            <FileExplorerComponent socket={socket} project={project}/>
           </div>
         </Panel>
 
@@ -78,8 +76,7 @@ const WorkspacePage = () => {
                     {currentFilePath && 
                     <span style={{ fontSize: '0.8rem', marginLeft: 10, color: '#aaa' }}>
                       ({currentFilePath})
-                    </span>
-                  }
+                    </span>}
                   </h3>
                 </div>
                 <CodeEditorComponent />

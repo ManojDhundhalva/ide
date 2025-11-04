@@ -15,7 +15,16 @@ const projectSchema = new mongoose.Schema(
             expandedDirectories: {
                 type: [String],
                 default: [],
-                select: false
+            },
+            tabs: {
+                tabList: {
+                    type: [String],
+                    default: []
+                },
+                activeTab: {
+                    type: String,
+                    default: null
+                },
             },
         },
         userId: {

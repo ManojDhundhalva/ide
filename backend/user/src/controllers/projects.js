@@ -8,21 +8,15 @@ import {
     deletedProjectByProjectId, 
     syncUserForProjectDelete,
     getExpandedDirectoriesOfProject,
-    updateExpandedDirectoriesOfProject,
+    updateMetadataOfProject,
 } from "../services/projectService.js";
 import { redisGet, redisSet, redisDel } from "../services/redisService.js";
 
 export const getProject = async (req, res) => {
     try {
-        const { id: projectId } = req.params;
-        const { _id: userId } = req.identity;
+        const { projectId } = req.params;
 
-        let project = await redisGet(`project:${userId}`);
-
-        if(!project) {
-            project = await getProjectByProjectId(projectId);
-            await redisSet(`project:${userId}`, project, 5 * 60); // for 5 minutes
-        }
+        const project = await getProjectByProjectId(projectId);
 
         return res.status(200).json({ message: "Project fetched successfully", project });
     } catch (error) {
@@ -80,7 +74,7 @@ export const createProject = async (req, res) => {
 
 export const updateProject = async (req, res) => {
     const { _id: userId } = req.identity;
-    const { id: projectId } = req.params;
+    const { projectId } = req.params;
     const { projectName, description } = req.body;
 
     if (!projectName) {
@@ -109,7 +103,7 @@ export const updateProject = async (req, res) => {
 };
 
 export const deleteProject = async (req, res) => {
-    const { id: projectId } = req.params;
+    const { projectId } = req.params;
     const { _id: userId } = req.identity;
 
     try {
@@ -130,43 +124,32 @@ export const deleteProject = async (req, res) => {
     }
 };
 
-export const getExpandedDirectories = async (req, res) => {    
+export const updateMetadata = async (req, res) => {
     try {
+        const { projectId } = req.params;
+        const { expandedDirectories, tabs } = req.body;
 
-        const { id: projectId } = req.params;
-
-        const project = await getExpandedDirectoriesOfProject(projectId);
-
-        if (!project) {
-            return res.status(404).json({ message: "Project not found: Invalid projectId" });
+        if(!expandedDirectories || !tabs || !tabs.tabList) {
+            return res.status(400).json({ message: "expandedDirectories, tabs.tabList are required." });
         }
 
-        return res.status(200).json({ expandedDirectories: project?.metadata?.expandedDirectories || [] });
-
-    } catch (error) {
-        console.error("Error fetching expanded directories:", error);
-        return res.status(500).json({ message: "Failed to get expanded directories" });
-    }
-};
-
-export const updateExpandedDirectories = async (req, res) => {
-    try {
-        const { id: projectId } = req.params;
-        const { expandedDirectories } = req.body;
-
-        if (!Array.isArray(expandedDirectories)) {
+        if (expandedDirectories && !Array.isArray(expandedDirectories)) {
             return res.status(400).json({ message: "expandedDirectories must be an array." });
         }
 
-        const updatedProject = await updateExpandedDirectoriesOfProject(projectId, expandedDirectories);
-
-        if (!updatedProject) {
-            return res.status(404).json({ message: "Project not found: Invalid projectId" });
+        if (tabs && tabs?.tabList && !Array.isArray(tabs.tabList)) {
+            return res.status(400).json({ message: "tabList must be an array." });
         }
 
-        return res.status(200).json({ message: "Expanded directories updated successfully" });
+        const updatedProject = await updateMetadataOfProject(projectId, expandedDirectories, tabs);
+
+        if (!updatedProject) {
+            return res.status(404).json({ message: `Project not found: Invalid projectId: ${projectId}` });
+        }
+
+        return res.status(200).json({ message: "Metadata updated successfully" });
     } catch (error) {
-        console.error("Error updating expandedDirectories:", error);
-        return res.status(500).json({ message: "Failed to update expanded directories", error: error.message });
+        console.error("Error updating metadata:", error);
+        return res.status(500).json({ message: "Failed to update metadata", error: error.message });
     }
 };

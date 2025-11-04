@@ -2,8 +2,10 @@ import { create } from "zustand";
 import { api } from "../config/api";
 
 export const useProjectStore = create((set) => ({ 
-    
+
     projects: [],
+
+    project: null,
 
     getProjectLoading: false,
     getProjectError: null,
@@ -22,9 +24,11 @@ export const useProjectStore = create((set) => ({
 
     getProject: async (projectId) => {
         try {
-            set({ getProjectLoading: true, getProjectError: null });
+            set({ project: null, getProjectLoading: true, getProjectError: null });
 
             const { data } = await api.get(`/project/${projectId}`);
+
+            set({ project: data.project });
 
             return data.project;
 

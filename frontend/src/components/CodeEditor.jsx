@@ -4,7 +4,7 @@ import { useFileStore } from '../store/fileStore';
 import debounce from "lodash.debounce";
 
 export default function CodeEditorComponent() {
-    const currentFilePath = useFileStore((s) => s.currentFilePath);
+    const currentFilePath = useFileStore((s) => s.activeTab);
     const getFileContent = useFileStore((s) => s.getFileContent);
     const saveFileContentToDB = useFileStore((s) => s.saveFileContentToDB);
 

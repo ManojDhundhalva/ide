@@ -11,6 +11,8 @@ export const getProject = async (projectId) => {
         await redisSet("user:project:projectId", data.project._id);
         await redisSet("user:project:projectName", data.project.projectName);
         await redisSet("user:project:description", data.project.description);
+        await redisSet("user:project:activeTab", data.project.metadata.tabs.activeTab);
+        await redisSetAddAll("user:project:tabList", data.project.metadata.tabs.tabList);
         await redisSetAddAll("file-explorer-expanded", data.project.metadata.expandedDirectories);
         // await redisSet("user:project:updatedAt", data.project.updatedAt);
         // await redisSet("user:project:createdAt", data.project.createdAt);

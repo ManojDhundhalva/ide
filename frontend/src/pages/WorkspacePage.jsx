@@ -1,49 +1,42 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 import { useSocket } from "../hooks/useSocket";
 
-import { useFileStore } from "../store/fileStore";
-import { useProjectStore } from "../store/projectStore";
-
 import TerminalComponent from "../components/Terminal";
 import FileExplorerComponent from "../components/FileExplorer";
 import CodeEditorComponent from "../components/CodeEditor";
+import TabsComponent from "../components/Tabs";
+
+import { useFileStore } from "../store/fileStore";
+import { useProjectStore } from "../store/projectStore";
 
 import "../css/WorkspacePage.css";
 
 const WorkspacePage = () => {
   const { id: projectId } = useParams();
-  const navigate = useNavigate();
 
-  const currentFilePath = useFileStore((s) => s.currentFilePath);
-  const getFileContentLoading = useFileStore((s) => s.getFileContentLoading);
-  const getProject = useProjectStore((s) => s.getProject);
-  
   const socket = useSocket({ projectId });
 
-  const [project, setProject] = useState({});
+  const initTabs = useFileStore((s) => s.initTabs);
+
+  const project = useProjectStore((s) => s.project);
+  const getProject = useProjectStore((s) => s.getProject);
 
   useEffect(() => {
     const fetchProject = async () => {
-        const data = await getProject(projectId);
-
-        if(!data) navigate("/");
-
-        setProject((prev) => ({
-          projectId: data._id ?? null,
-          projectName: data.projectName ?? null,
-          description: data.description ?? null,
-          updatedAt: data.updatedAt ?? null,
-          createdAt: data.createdAt ?? null,
-          metadata: data.metadata ?? null
-        }));
+      const project = await getProject(projectId);
+      const { tabList, activeTab } = project.metadata.tabs;
+      initTabs(tabList, activeTab);
     };
 
     fetchProject();
+  }, []);
 
-  }, [getProject, projectId]);
+  if(!project) {
+    return <h1>Loading...</h1>
+  }
 
   return (
     <div className="workspace-container">
@@ -59,7 +52,7 @@ const WorkspacePage = () => {
             <div className="panel-header">
               <h3>Explorer</h3>
             </div>
-            <FileExplorerComponent socket={socket} project={project}/>
+            <FileExplorerComponent socket={socket}/>
           </div>
         </Panel>
 
@@ -68,17 +61,11 @@ const WorkspacePage = () => {
         {/* Main Content Area */}
         <Panel className="main-content-panel">
           <PanelGroup direction="vertical">
+            <TabsComponent socket={socket}/>
+
             {/* Code Editor Area */}
             <Panel defaultSize={70} minSize={30} className="editor-panel">
-              <div className="panel-content">
-                <div className="panel-header">
-                  <h3>Editor {getFileContentLoading ? "Loading..." : ""}
-                    {currentFilePath && 
-                    <span style={{ fontSize: '0.8rem', marginLeft: 10, color: '#aaa' }}>
-                      ({currentFilePath})
-                    </span>}
-                  </h3>
-                </div>
+              <div className="panel-content" style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
                 <CodeEditorComponent />
               </div>
             </Panel>

@@ -1,32 +1,28 @@
 import { useEffect, useState } from "react";
 import { useFileStore } from "../store/fileStore"; 
+import { useProjectStore } from "../store/projectStore";
 
-export default function FileExplorerComponent({ socket, project }) {
+export default function FileExplorerComponent({ socket }) {
   
   const fileTree = useFileStore((s) => s.fileTree);
   const getFilesLoading = useFileStore((s) => s.getFilesLoading);
   const getFilesError = useFileStore((s) => s.getFilesError);
   const getFileContentLoading = useFileStore((s) => s.getFileContentLoading);
   const getFiles = useFileStore((s) => s.getFiles);
+  const getFilesDirectoryPath = useFileStore((s) => s.getFilesDirectoryPath);
+  const getFileContentFilePath = useFileStore((s) => s.getFileContentFilePath);
+
+  const openTab = useFileStore((s) => s.openTab);
   const initFiles = useFileStore((s) => s.initFiles);
   const handleRefreshFileExplorer = useFileStore((s) => s.handleRefreshFileExplorer);
-  const getExpandedDirectories = useFileStore((s) => s.getExpandedDirectories);
-  const setCurrentFilePath = useFileStore((s) => s.setCurrentFilePath);
+  const activeFile = useFileStore((s) => s.activeTab);
 
-  const [expandedFolders, setExpandedFolders] = useState(new Set());
+  const project = useProjectStore((s) => s.project);
+  const [expandedFolders, setExpandedFolders] = useState(new Set(project?.metadata?.expandedDirectories));
 
   useEffect(() => {
     initFiles();
   }, [initFiles]);
-
-  useEffect(() => {
-    const fetchExpanded = async () => {
-      if(!project.projectId) return;
-      const data = await getExpandedDirectories(project.projectId);
-      setExpandedFolders((prev) => new Set(data));
-    }
-    fetchExpanded();
-  }, [project]);
 
   const handleFolderClick = async (folderPath, folderName) => {
     const fullPath = folderPath ? `${folderPath}/${folderName}` : folderName;
@@ -54,7 +50,7 @@ export default function FileExplorerComponent({ socket, project }) {
 
   const handleFileClick = async (filePath, fileName) => {
     const fullPath = filePath ? `${filePath}/${fileName}` : fileName;
-    setCurrentFilePath(fullPath);
+    openTab(fullPath, socket);
   };
 
   useEffect(() => {
@@ -74,6 +70,8 @@ export default function FileExplorerComponent({ socket, project }) {
     return entries.map((entry) => {
       const fullPath = path ? `${path}/${entry.name}` : entry.name;
       const isExpanded = expandedFolders.has(fullPath);
+      const isCurrentDirectoryLoading = getFilesLoading && getFilesDirectoryPath === fullPath;
+      const isCurrentFileLoading = getFileContentLoading && getFileContentFilePath === fullPath;
       
       return (
         <div key={fullPath} style={{ marginLeft: `${level * 10}px` }}>
@@ -92,7 +90,7 @@ export default function FileExplorerComponent({ socket, project }) {
               >
                 <span>{isExpanded ? '📂' : '📁'}</span>
                 <span>{entry.name}</span>
-                {getFilesLoading && isExpanded && <span>⏳</span>}
+                {isCurrentDirectoryLoading && <span>⏳</span>}
               </div>
               {isExpanded && renderFileTree(fullPath, level + 1)}
             </div>
@@ -104,12 +102,13 @@ export default function FileExplorerComponent({ socket, project }) {
                 padding: '5px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px'
+                gap: '5px',
+                backgroundColor: activeFile === fullPath ? "grey" : "transparent",
               }}
             >
               <span>📄</span>
               <span>{entry.name}</span>
-              {getFileContentLoading && <span>⏳</span>}
+              {isCurrentFileLoading && <span>⏳</span>}
             </div>
           )}
         </div>

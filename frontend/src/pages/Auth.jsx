@@ -16,7 +16,9 @@ const Auth = () => {
 
   return (
     <>
-      <button onClick={googleLogin}>Auth</button>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100vh"}}>
+        <button onClick={googleLogin}>Continue with Google</button>
+      </div>
     </>
   );
 };

@@ -1,14 +1,78 @@
 import { create } from "zustand";
-import { api, apiWS } from "../config/api";
+import { apiWS } from "../config/api";
 
 export const useFileStore = create((set, get) => ({
 
     tabs: [],
+    activeTab: null,
 
-    currentFilePath: null,
+    initTabs: (initialTabs = [], initialActiveTab = null) => {
+        const tabs = initialTabs.map((item) => ({
+            filePath: item,
+            title: item.split("/").pop()
+        }));
 
-    setCurrentFilePath: (path = null) => {
-        set(() => ({ currentFilePath: path }));
+        set({
+            tabs,
+            activeTab: initialActiveTab
+        });
+    },
+
+    openTab: (filePath, socket) => {
+        const { tabs } = get();
+    
+        const existingTab = tabs.find((tab) => tab.filePath === filePath);
+    
+        if (existingTab) {
+            socket.emit("tabs:set-active-tab", { path: existingTab.filePath });
+            set({ activeTab: existingTab.filePath });
+            return;
+        }
+    
+        const newTab = {
+            filePath,
+            title: filePath.split('/').pop(),
+        };
+    
+        set({ 
+            tabs: [...tabs, newTab],
+            activeTab: filePath
+        });
+
+        socket.emit("tabs:set-active-tab", { path: filePath });
+        socket.emit("tabs:open-tab", { path: filePath });
+    },  
+  
+    closeTab: (filePath, socket) => {
+        const { tabs, activeTab } = get();
+        
+        const newTabs = tabs.filter((tab) => tab.filePath !== filePath);
+        
+        let newActiveTab = activeTab;
+
+        if (activeTab === filePath) {
+
+            const currentIndex = tabs.findIndex(tab => tab.filePath === filePath);
+
+            if (newTabs.length > 0) {
+
+                const nextTab = newTabs[Math.min(currentIndex, newTabs.length - 1)];
+                newActiveTab = nextTab.filePath;
+                socket.emit("tabs:set-active-tab", { path: newActiveTab });
+            }
+        }
+        
+        set({ 
+            tabs: newTabs,
+            activeTab: newActiveTab
+        });
+
+        socket.emit("tabs:close-tab", { path: filePath });
+    },
+
+    setActiveTab: (filePath, socket) => {
+        socket.emit("tabs:set-active-tab", { path: filePath });
+        set({ activeTab: filePath });
     },
 
     fileTree: new Map(),
@@ -18,15 +82,14 @@ export const useFileStore = create((set, get) => ({
     
     getFilesLoading: false,
     getFilesError: null,
+    getFilesDirectoryPath: null,
 
     getFileContentLoading: false,
     getFileContentError: null,
+    getFileContentFilePath: null,
 
     saveFileContentToDBLoading: false,
     saveFileContentToDBError: null,
-
-    getExpandedDirectoriesLoading: false,
-    getExpandedDirectoriesError: null,
 
     handleRefreshFileExplorer: (data) => {
         set((state) => {
@@ -65,9 +128,10 @@ export const useFileStore = create((set, get) => ({
         }
     },
 
+    // when you click then you get files and folders
     getFiles: async (path = "") => {
         try {
-            set({ getFilesLoading: true, getFilesError: null });
+            set({ getFilesLoading: true, getFilesError: null, getFilesDirectoryPath: path });
 
             const { data } = await apiWS.get(`/files?path=${path}`);
 
@@ -79,16 +143,17 @@ export const useFileStore = create((set, get) => ({
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || "Failed to fetch files and/or directories";
-            set({ getFilesError: errorMsg });
+            set({ getFilesError: errorMsg, getFilesDirectoryPath: null });
             console.error("FetFiles Error:", errorMsg);
         }  finally {
-            set({ getFilesLoading: false });
+            set({ getFilesLoading: false, getFilesDirectoryPath: null });
         }
     },
 
+    // when you click a file the you get it's contents
     getFileContent: async (path) => {
         try {
-            set({ getFileContentLoading: true, getFileContentError: null });
+            set({ getFileContentLoading: true, getFileContentError: null, getFileContentFilePath: path });
 
             if (!path) {
                 throw new Error("Path cannot be empty");
@@ -100,11 +165,11 @@ export const useFileStore = create((set, get) => ({
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || "Failed to fetch file content";
-            set({ getFileContentError: errorMsg });
+            set({ getFileContentError: errorMsg, getFileContentFilePath: null });
             console.error("GetFileContent Error:", errorMsg);
             return "";
         }  finally {
-            set({ getFileContentLoading: false });
+            set({ getFileContentLoading: false, getFileContentFilePath: null });
         }
     },
 
@@ -112,7 +177,7 @@ export const useFileStore = create((set, get) => ({
         try {
             set({ saveFileContentToDBLoading: true, saveFileContentToDBError: null });
 
-            const currentFilePath = get().currentFilePath;
+            const { activeTab: currentFilePath } = get();
 
             if (!currentFilePath) return;
 
@@ -126,23 +191,5 @@ export const useFileStore = create((set, get) => ({
             set({ saveFileContentToDBLoading: false });
         }
     },
-
-    getExpandedDirectories: async (projectId) => {
-        try {
-            set({ getExpandedDirectoriesLoading: true, getExpandedDirectoriesError: null });
-
-            const { data } = await api.get(`/project/metadata/${projectId}`);
-
-            return data.expandedDirectories;
-
-        } catch (error) {
-            const errorMsg = error.response?.data?.message || error.message || `Failed to fetch expanded directories`;
-            set({ getExpandedDirectoriesError: errorMsg });
-            console.error("getExpandedDirectories Error:", errorMsg);
-            return null;
-        } finally {
-            set({ getExpandedDirectoriesLoading: false });
-        }
-    },
-
+    
 }));

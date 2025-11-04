@@ -1,7 +1,7 @@
 import { ProjectModel } from "../models/projects.js";
 import { UserModel } from "../models/users.js";
 
-export const getProjectByProjectId = (projectId) => ProjectModel.findById(projectId).select('userId projectName description updatedAt createdAt +metadata.expandedDirectories').lean();
+export const getProjectByProjectId = (projectId) => ProjectModel.findById(projectId).select('userId projectName description updatedAt createdAt metadata.expandedDirectories metadata.tabs').lean();
 
 export const getUserIdByProjectId = (projectId) => ProjectModel.findById(projectId, { userId: 1, _id: 0 });
 
@@ -52,4 +52,14 @@ export const syncUserForProjectDelete = (userId, projectId) => UserModel.findByI
 
 export const getExpandedDirectoriesOfProject = (projectId) => ProjectModel.findById(projectId, { "metadata.expandedDirectories": 1 }).lean();
 
-export const updateExpandedDirectoriesOfProject = (projectId, expandedDirectories) => ProjectModel.findByIdAndUpdate(projectId, { 'metadata.expandedDirectories': expandedDirectories }, { new: true, runValidators: true } );
+export const updateMetadataOfProject = (projectId, expandedDirectories, tabs) => ProjectModel.findByIdAndUpdate(
+    projectId, 
+    {
+        $set: {
+            "metadata.expandedDirectories": expandedDirectories ? expandedDirectories : [],
+            "metadata.tabs.tabList": (tabs && tabs?.tabList) ? tabs.tabList : [],
+            "metadata.tabs.activeTab": (tabs && tabs?.activeTab) ? tabs.activeTab : null
+        }
+    },
+    { new: true, runValidators: true }
+);

@@ -3,3 +3,5 @@
 2. add redisSet name "file-explorer" => FILE_EXPLORER_SET
 
 3. what if user deletes "base-dir"?
+
+4. all tabs features are remaining. 

@@ -1,6 +1,6 @@
 import fs from "fs";
 import pty from "node-pty";
-import { saveExpandDirectoriesToDB } from "../services/fileServices.js";
+import { saveMetadata } from "../services/fileServices.js";
 import { redisGet, redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
 import { handleRefreshFileExplorer, initializeWorkingDirectory, saveWorkingDirectoryToCloud } from "../utils/files.js";
 import { getProject } from "../services/projectService.js";
@@ -95,7 +95,7 @@ const socketHandlers = (io) => {
             return;
         }
 
-        initializeWorkingDirectory();
+        // initializeWorkingDirectory();
 
         await watchFileSystem(socket);
 
@@ -138,9 +138,21 @@ const socketHandlers = (io) => {
             await redisSetRemove("file-explorer-expanded", path);
         });
 
+        socket.on("tabs:set-active-tab", async ({ path }) => {
+            await redisSet("user:project:activeTab", path);
+        });
+
+        socket.on("tabs:open-tab", async ({ path }) => {
+            await redisSetAdd("user:project:tabList", path);
+        });
+
+        socket.on("tabs:close-tab", async ({ path }) => {
+            await redisSetRemove("user:project:tabList", path);
+        });
+
         socket.on("disconnect", async (reason) => {
-            await saveExpandDirectoriesToDB();
-            await saveWorkingDirectoryToCloud();
+            await saveMetadata();
+            // await saveWorkingDirectoryToCloud();
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             try { ptyProcess.kill(); } catch (e) {}
         });

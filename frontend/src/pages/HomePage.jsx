@@ -1,8 +1,8 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { useProjectStore } from "../store/projectStore";
 import { useLogout } from "../hooks/useLogout";
-import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const logOut = useLogout();
@@ -11,6 +11,7 @@ const HomePage = () => {
   const user = useAuthStore((s) => s.user);
 
   const projects = useProjectStore((s) => s.projects);
+
   const getAllProjects = useProjectStore((s) => s.getAllProjects);
   const createProject = useProjectStore((s) => s.createProject);
   const updateProject = useProjectStore((s) => s.updateProject);

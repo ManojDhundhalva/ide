@@ -2,7 +2,7 @@ import fs from "fs";
 import pty from "node-pty";
 import { saveMetadata } from "../services/fileServices.js";
 import { redisGet, redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
-import { handleRefreshFileExplorer, initializeWorkingDirectory, saveWorkingDirectoryToCloud } from "../utils/files.js";
+import { handleRefreshFileExplorer } from "../utils/files.js";
 import { getProject } from "../services/projectService.js";
 
 const spawnTerminal = async () => {
@@ -18,7 +18,7 @@ const spawnTerminal = async () => {
 };
 
 // function to watch file changes and emit socket events
-const watchFileSystem = async (socket) => {
+const watchFileSystem = async (io) => {
     let timeoutId = null;
     let isProcessing = false;
     
@@ -38,7 +38,7 @@ const watchFileSystem = async (socket) => {
             isProcessing = true;
             try {
                 const data = await handleRefreshFileExplorer();
-                socket.emit("file-explorer:refresh", { data });
+                io.emit("file-explorer:refresh", { data });
             } catch (error) {
                 console.error('Error refreshing file explorer:', error);
             } finally {
@@ -73,9 +73,24 @@ const watchFileSystem = async (socket) => {
     return cleanup; // Return cleanup function if you need to call it manually
 };
 
+let activeConnections = 0;
+let idleTimer = null;
+
+// container will shut down if no socket connected for 10 minutes
+const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 min
+
 const socketHandlers = (io) => {
     io.on("connection", async (socket) => {
+
+        activeConnections++;
+
         console.log(`New client connected: ${socket.id}`);
+
+        // Clear any existing idle timer (since someone connected)
+        if (idleTimer) {
+            clearTimeout(idleTimer);
+            idleTimer = null;
+        }
 
         await redisSet("user:cookie", socket.handshake.headers?.cookie || "");
 
@@ -95,16 +110,14 @@ const socketHandlers = (io) => {
             return;
         }
 
-        // initializeWorkingDirectory();
-
-        await watchFileSystem(socket);
+        await watchFileSystem(io);
 
         let ptyProcess = await spawnTerminal();
 
         const attachHandlers = (ptyProc) => {
             // Forward data from pty to client
             ptyProc.onData((data) => {
-                socket.emit("terminal:read", data);
+                io.emit("terminal:read", data);
             });
 
             // Handle terminal exit
@@ -114,7 +127,7 @@ const socketHandlers = (io) => {
                 attachHandlers(ptyProcess);
 
                 // Notify client
-                socket.emit("terminal:read", "\r\nTerminal restarted automatically.\r\n");
+                io.emit("terminal:read", "\r\nTerminal restarted automatically.\r\n");
             });
         };
 
@@ -155,6 +168,18 @@ const socketHandlers = (io) => {
             // await saveWorkingDirectoryToCloud();
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             try { ptyProcess.kill(); } catch (e) {}
+
+            activeConnections--;
+            
+            console.log(`Active connections: ${activeConnections}`);
+
+            // Start shutdown timer if no one is connected
+            if (activeConnections === 0) {
+                idleTimer = setTimeout(() => {
+                    console.log("No active users for 10 minutes. Stopping container...");
+                    process.exit(0);
+                }, IDLE_TIMEOUT);
+            }
         });
     });
 };

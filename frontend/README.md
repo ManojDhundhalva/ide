@@ -4,4 +4,4 @@
 
 3. what if user deletes "base-dir"?
 
-4. all tabs features are remaining. 
+4. while remaing the files tabs are not changing names, means not-interative

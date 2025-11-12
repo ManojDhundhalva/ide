@@ -1,11 +1,7 @@
 import fs from "fs/promises";
-import fssync from "fs";  
 import path from "path";
-import archiver from "archiver";
-import unzipper from "unzipper";
-import config, { status } from "../config/index.js";
+import config from "../config/index.js";
 import { redisGet, redisSet, redisSetGetAll } from "../services/redisService.js";
-import { downloadFileFromS3, putFileOnS3 } from "../services/awsService.js";
 
 export const getDirectoryEntries = async (requested = null) => {
     const targetPath = await getFullPath(requested);
@@ -77,98 +73,4 @@ export const handleRefreshFileExplorer = async () => {
     filtered.push({ path: "", entries });
 
     return filtered;
-};
-
-export const createZip = async (sourcePath, destinationPath) => {
-    return new Promise((resolve, reject) => {
-        if (!fs.existsSync(sourcePath)) {
-            return reject(new Error(`Source path does not exist: ${sourcePath}`));
-        }
-
-        const output = fs.createWriteStream(destinationPath);
-        const archive = archiver('zip', {
-            zlib: { level: 9 }
-        });
-
-        output.on('close', () => {
-            console.log(`✅ Zip created: ${archive.pointer()} bytes`);
-            resolve(destinationPath);
-        });
-
-        archive.on('error', (err) => {
-            reject(err);
-        });
-
-        archive.on('warning', (err) => {
-            if (err.code === 'ENOENT') {
-                console.warn('Warning:', err);
-            } else {
-                reject(err);
-            }
-        });
-
-        archive.pipe(output);
-
-        const stat = fs.statSync(sourcePath);
-        if (stat.isDirectory()) {
-            const folderName = path.basename(sourcePath);
-            archive.directory(sourcePath, folderName);
-        } else {
-            archive.file(sourcePath, { name: path.basename(sourcePath) });
-        }
-
-        archive.finalize();
-    });
-}
-
-export const unzipFile = async (sourceZipPath, destinationPath) => {
-    return new Promise((resolve, reject) => {
-        if (!fssync.existsSync(sourceZipPath)) {
-            return reject(new Error(`Source zip does not exist: ${sourceZipPath}`));
-        }
-
-        fssync.createReadStream(sourceZipPath)
-            .pipe(unzipper.Extract({ path: destinationPath }))
-            .on("close", () => {
-                console.log(`✅ Unzipped to: ${destinationPath}`);
-                resolve(destinationPath);
-            })
-            .on("error", reject)
-            .on("warn", (err) => {
-                if (err.code === "ENOENT") console.warn("Warning:", err);
-                else reject(err);
-            });
-    });
-};
-
-export const initializeWorkingDirectory = async () => {
-    try {
-        const tmpFileName = `tmp_${Date.now()}`;
-        const tmpFilePath = path.join(config.BASE_PATH, tmpFileName);
-        
-        await downloadFileFromS3(tmpFilePath);
-        
-        const baseDir = await redisGet("project:base-dir");
-        
-        await unzipFile(tmpFilePath, baseDir);
-        
-        await fs.unlink(tmpFilePath);
-    } catch (error) {
-        console.error(status.ERROR, "InitializeWorkingDirectory:", error.message);
-    }
-};
-
-export const saveWorkingDirectoryToCloud = async () => {
-    try {
-        const tmpFileName = `tmp_${Date.now()}`;
-        const tmpFilePath = path.join(config.BASE_PATH, tmpFileName);
-
-        const baseDir = await redisGet("project:base-dir");
-
-        await createZip(baseDir, tmpFilePath);
-
-        await putFileOnS3(tmpFilePath);
-    } catch (error) {
-        console.error(status.ERROR, "SaveWorkingDirectoryToCloud:", error.message);
-    }
 };

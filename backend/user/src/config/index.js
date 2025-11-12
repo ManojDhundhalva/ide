@@ -9,12 +9,18 @@ const config = {
     PASSWORD_SECRET: String(process.env.PASSWORD_SECRET),
     GOOGLE_CLIENT_ID: String(process.env.GOOGLE_CLIENT_ID),
     GOOGLE_CLIENT_SECRET: String(process.env.GOOGLE_CLIENT_SECRET),
-    AWS_BUCKET_NAME: String(process.env.AWS_BUCKET_NAME),
+    WORKSPACE_URL: String(process.env.WORKSPACE_URL),
+    CLIENT_URL: String(process.env.CLIENT_URL)
+};
+
+export const awsConfig = {
+    AWS_ACCOUNT_ID: String(process.env.AWS_ACCOUNT_ID),
+    AWS_REPOSITORY_NAME: String(process.env.AWS_REPOSITORY_NAME),
+    AWS_DEFAULT_REPOSITORY_NAME: String(process.env.AWS_DEFAULT_REPOSITORY_NAME),
+    AWS_DEFAULT_REPOSITORY_TAG: String(process.env.AWS_DEFAULT_REPOSITORY_TAG),
     AWS_REGION: String(process.env.AWS_REGION),
     AWS_ACCESS_KEY_ID: String(process.env.AWS_ACCESS_KEY_ID),
     AWS_SECRET_ACCESS_KEY: String(process.env.AWS_SECRET_ACCESS_KEY),
-    WORKSPACE_URL: String(process.env.WORKSPACE_URL),
-    CLIENT_URL: String(process.env.CLIENT_URL)
 };
 
 export default config;

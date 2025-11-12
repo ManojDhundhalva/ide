@@ -50,8 +50,6 @@ export const deletedProjectByProjectId = (projectId) => ProjectModel.findByIdAnd
 
 export const syncUserForProjectDelete = (userId, projectId) => UserModel.findByIdAndUpdate(userId, { $pull: { projects: projectId } });
 
-export const getExpandedDirectoriesOfProject = (projectId) => ProjectModel.findById(projectId, { "metadata.expandedDirectories": 1 }).lean();
-
 export const updateMetadataOfProject = (projectId, expandedDirectories, tabs) => ProjectModel.findByIdAndUpdate(
     projectId, 
     {

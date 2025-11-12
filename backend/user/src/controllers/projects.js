@@ -7,10 +7,10 @@ import {
     updateProjectDetails, 
     deletedProjectByProjectId, 
     syncUserForProjectDelete,
-    getExpandedDirectoriesOfProject,
     updateMetadataOfProject,
 } from "../services/projectService.js";
 import { redisGet, redisSet, redisDel } from "../services/redisService.js";
+import { createAndStartContainer } from "../utils/aws.js";
 
 export const getProject = async (req, res) => {
     try {
@@ -66,6 +66,7 @@ export const createProject = async (req, res) => {
     try {
         const project = await createNewProject({ projectName, description, userId });
         await addProjectToUser(userId, project._id);
+        await createAndStartContainer(project._id);
         return res.status(201).json({ message: "Project created successfully", project });
     } catch (error) {
         return res.status(500).json({ message: "Failed to create project. Please try again." });

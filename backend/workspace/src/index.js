@@ -28,8 +28,14 @@ app.use("/", router());
 
 app.get("/", (_, res) => res.send("Hello, World!"));
 
+// connectRedis().then(() => {
+//     server.listen(config.PORT, () => { 
+//         console.log(`🚀 Server is listening on http://localhost:${config.PORT}`)
+//     });
+// });
+
 connectRedis().then(() => {
-    server.listen(config.PORT, () => { 
+    server.listen(config.PORT, "0.0.0.0", () => { 
         console.log(`🚀 Server is listening on http://localhost:${config.PORT}`)
     });
 });

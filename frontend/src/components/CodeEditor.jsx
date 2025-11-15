@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Editor from '@monaco-editor/react';
 import { useFileStore } from '../store/fileStore';
 import debounce from "lodash.debounce";
+import { detectLanguage } from "../utils/language";
 
 export default function CodeEditorComponent() {
     const currentFilePath = useFileStore((s) => s.activeTab);
@@ -10,6 +11,7 @@ export default function CodeEditorComponent() {
     const tabs = useFileStore((s) => s.tabs);
 
     const [editorValue, setEditorValue] = useState("");
+    const [language, setLanguage] = useState("plaintext");
 
     useEffect(() => {
         if (!currentFilePath) {
@@ -20,6 +22,7 @@ export default function CodeEditorComponent() {
         const fetchContent = async () => {
             const content = await getFileContent(currentFilePath);
             setEditorValue(content || "");
+            setLanguage(detectLanguage(currentFilePath));
         };
 
         fetchContent();
@@ -55,14 +58,15 @@ export default function CodeEditorComponent() {
         <div style={{ flex: 1, background: '#1e1e1e' }}>
             <Editor
                 height="100%"
-                language="javascript"
+                language={language}
                 theme="vs-dark"
                 value={editorValue}
                 onChange={handleEditorChange}
                 options={{
-                minimap: { enabled: true },
-                fontSize: 14,
-                wordWrap: 'on',
+                    fontFamily: "Martian Mono",
+                    minimap: { enabled: true },
+                    fontSize: 12,
+                    wordWrap: 'on',
                 }}
             />
         </div>

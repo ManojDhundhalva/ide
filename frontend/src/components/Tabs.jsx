@@ -39,12 +39,12 @@ export default function TabsComponent({ socket }) {
             style={{
               display: 'flex',
               alignItems: 'center',
-              padding: '8px 12px',
+              padding: '6px 10px',
               backgroundColor: isActive ? '#1e1e1e' : '#2d2d2d',
               borderRight: '1px solid #3e3e3e',
               cursor: 'pointer',
               minWidth: '120px',
-              maxWidth: '200px',
+              maxWidth: '160px',
               fontSize: '13px',
               color: isActive ? '#fff' : '#ccc',
               userSelect: 'none',
@@ -63,6 +63,7 @@ export default function TabsComponent({ socket }) {
           >
             <span
               style={{
+                fontSize: "small",
                 flex: 1,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',

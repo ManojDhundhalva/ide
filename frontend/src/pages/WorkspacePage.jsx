@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
@@ -19,35 +19,34 @@ const WorkspacePage = () => {
 
   const socket = useSocket({ projectId });
 
+  const initFiles = useFileStore((s) => s.initFiles);
   const initTabs = useFileStore((s) => s.initTabs);
 
   const project = useProjectStore((s) => s.project);
   const getProject = useProjectStore((s) => s.getProject);
 
+  const [fetching, setFetching] = useState(true);
+
   useEffect(() => {
-    const fetchProject = async () => {
+    const initialization = async () => {
+      await initFiles();
       const project = await getProject(projectId);
       const { tabList, activeTab } = project.metadata.tabs;
       initTabs(tabList, activeTab);
+      setFetching(false);
     };
 
-    fetchProject();
+    initialization();
   }, []);
 
-  if(!project) {
+  if(fetching) {
     return <h1>Loading...</h1>
   }
 
   return (
     <div className="workspace-container">
-      <PanelGroup direction="horizontal" className="main-panel-group">
-        {/* File Explorer Sidebar */}
-        <Panel 
-          defaultSize={20} 
-          minSize={15} 
-          maxSize={80}
-          className="sidebar-panel"
-        >
+      <PanelGroup direction="horizontal">
+        <Panel defaultSize={20} minSize={15} maxSize={80} className="sidebar-panel">
           <div className="panel-content">
             <div className="panel-header">
               <h3>Explorer</h3>
@@ -58,31 +57,26 @@ const WorkspacePage = () => {
 
         <PanelResizeHandle className="resize-handle horizontal" />
 
-        {/* Main Content Area */}
         <Panel className="main-content-panel">
           <PanelGroup direction="vertical">
-            <TabsComponent socket={socket}/>
-
-            {/* Code Editor Area */}
-            <Panel defaultSize={70} minSize={30} className="editor-panel">
-              <div className="panel-content" style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
-                <CodeEditorComponent />
+            <Panel defaultSize={70} minSize={20} className="editor-panel">
+              <div className="editor-panel-content">
+                <TabsComponent socket={socket}/>
+                <div className="editor-wrapper">
+                  <CodeEditorComponent />
+                </div>
               </div>
             </Panel>
 
             <PanelResizeHandle className="resize-handle vertical" />
 
-            {/* Terminal Area */}
             <Panel 
               defaultSize={30} 
               minSize={10} 
-              maxSize={100}
+              maxSize={80}
               className="terminal-panel"
             >
-              <div className="panel-content">
-                <div className="panel-header">
-                  <h3>Terminal</h3>
-                </div>
+              <div className="panel-content" style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
                 <TerminalComponent socket={socket} />
               </div>
             </Panel>

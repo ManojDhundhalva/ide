@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useFileStore } from "../store/fileStore"; 
 import { useProjectStore } from "../store/projectStore";
 
+import { CircularProgress } from "@mui/material";
+
 export default function FileExplorerComponent({ socket }) {
   
   const fileTree = useFileStore((s) => s.fileTree);
@@ -13,16 +15,12 @@ export default function FileExplorerComponent({ socket }) {
   const getFileContentFilePath = useFileStore((s) => s.getFileContentFilePath);
 
   const openTab = useFileStore((s) => s.openTab);
-  const initFiles = useFileStore((s) => s.initFiles);
+
   const handleRefreshFileExplorer = useFileStore((s) => s.handleRefreshFileExplorer);
   const activeFile = useFileStore((s) => s.activeTab);
 
   const project = useProjectStore((s) => s.project);
   const [expandedFolders, setExpandedFolders] = useState(new Set(project?.metadata?.expandedDirectories));
-
-  useEffect(() => {
-    initFiles();
-  }, [initFiles]);
 
   const handleFolderClick = async (folderPath, folderName) => {
     const fullPath = folderPath ? `${folderPath}/${folderName}` : folderName;
@@ -74,23 +72,41 @@ export default function FileExplorerComponent({ socket }) {
       const isCurrentFileLoading = getFileContentLoading && getFileContentFilePath === fullPath;
       
       return (
-        <div key={fullPath} style={{ marginLeft: `${level * 10}px` }}>
+        <div key={fullPath} style={{ marginLeft: `${level * 10}px`, marginTop: "2px" }}>
           {entry.type === 'directory' ? (
             <div>
               <div
                 onClick={() => handleFolderClick(path, entry.name)}
                 style={{
+                  color: "rgba(220, 220, 220, 1)",
                   cursor: 'pointer',
-                  padding: '2px',
-                  backgroundColor: isExpanded ? '#000' : 'transparent',
+                  paddingTop: "2px",
+                  paddingBottom: "2px",
+                  paddingLeft: "8px",
+                  paddingRight: "8px",
+                  backgroundColor: isExpanded ? 'rgba(40, 40, 40, 1)' : 'transparent',
                   display: 'flex',
+                  justifyContent:"space-between",
                   alignItems: 'center',
-                  gap: '5px'
+                  borderRadius: "6px",
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <span>{isExpanded ? '📂' : '📁'}</span>
-                <span>{entry.name}</span>
-                {isCurrentDirectoryLoading && <span>⏳</span>}
+                <div>
+                {isExpanded ? <i className="fa-regular fa-folder-open fa-sm" style={{width:"16px"}}></i> : <i className="fa-regular fa-folder fa-sm" style={{width:"16px"}}></i>}
+                <span style={{paddingLeft:"2px"}}>{entry.name}</span>
+                </div>
+                {isCurrentDirectoryLoading && 
+                  <CircularProgress
+                    size={10}
+                    thickness={6}
+                    sx={{
+                      color: "white",
+                      '& circle': { strokeLinecap: 'round' },
+                    }}
+                  />}
               </div>
               {isExpanded && renderFileTree(fullPath, level + 1)}
             </div>
@@ -99,16 +115,32 @@ export default function FileExplorerComponent({ socket }) {
               onClick={() => handleFileClick(path, entry.name)}
               style={{
                 cursor: 'pointer',
-                padding: '5px',
+                paddingTop: "2px",
+                paddingBottom: "2px",
+                paddingLeft: "8px",
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px',
-                backgroundColor: activeFile === fullPath ? "grey" : "transparent",
+                backgroundColor: activeFile === fullPath ? '#4d4d4dff' : "transparent",
+                borderRadius: "6px",
               }}
             >
-              <span>📄</span>
-              <span>{entry.name}</span>
-              {isCurrentFileLoading && <span>⏳</span>}
+              <div style={{display:"flex"}}>
+                <div style={{width:"14px", justifyContent:"center",alignItems:"center"}}>
+                  <i className="fa-regular fa-file-lines fa-sm"></i>
+                </div>
+                <span style={{paddingLeft:"2px"}}>{entry.name}</span>
+              </div>
+              <div>
+              {isCurrentFileLoading && 
+                <CircularProgress
+                size={10}
+                thickness={6}
+                sx={{
+                  color: "white",
+                  '& circle': { strokeLinecap: 'round' },
+                }}
+                />}
+              </div>
             </div>
           )}
         </div>
@@ -125,12 +157,12 @@ export default function FileExplorerComponent({ socket }) {
   }
 
   return (
-    <div style={{ flex: 1, overflow: 'auto', fontFamily: 'Arial, sans-serif', padding: '8px' }}>
+    <div style={{ flex: 1, overflow: 'auto' }}>
       {getFilesLoading && !fileTree.size && (
         <div>Loading files...</div>
       )}
       
-      <div style={{ padding: '10px', height: "100%", width: "100%", backgroundColor: "rgba(50, 50, 50, 1)" }}>
+      <div style={{ padding: '8px', height: "100%", width: "100%" }}>
         {renderFileTree()}
       </div>
     </div>

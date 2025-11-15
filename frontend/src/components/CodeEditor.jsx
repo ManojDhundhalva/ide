@@ -7,6 +7,7 @@ export default function CodeEditorComponent() {
     const currentFilePath = useFileStore((s) => s.activeTab);
     const getFileContent = useFileStore((s) => s.getFileContent);
     const saveFileContentToDB = useFileStore((s) => s.saveFileContentToDB);
+    const tabs = useFileStore((s) => s.tabs);
 
     const [editorValue, setEditorValue] = useState("");
 
@@ -43,6 +44,12 @@ export default function CodeEditorComponent() {
         setEditorValue(value);
         debouncedSave(value);
     };
+
+    useEffect(() => {
+        console.log("currentFilePath", currentFilePath);
+    }, []);
+
+    if(tabs.length === 0) return null;
 
     return (
         <div style={{ flex: 1, background: '#1e1e1e' }}>

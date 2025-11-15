@@ -59,6 +59,9 @@ export const useFileStore = create((set, get) => ({
                 const nextTab = newTabs[Math.min(currentIndex, newTabs.length - 1)];
                 newActiveTab = nextTab.filePath;
                 socket.emit("tabs:set-active-tab", { path: newActiveTab });
+            
+            } else {
+                newActiveTab = null;
             }
         }
         
@@ -90,6 +93,20 @@ export const useFileStore = create((set, get) => ({
 
     saveFileContentToDBLoading: false,
     saveFileContentToDBError: null,
+
+    fileExistsInDirectory: (filePath) => {
+        const { fileTree } = get();
+
+        const parts = filePath.split("/");
+        const fileName = parts.pop(); // "file.js"
+        const dirPath = parts.join("/"); // "dir1/dir2/dir3"
+
+        if (!fileTree.has(dirPath)) return false;
+
+        const entries = fileTree.get(dirPath);
+        
+        return entries.some(entry => entry.name === fileName && entry.type !== "directory");
+    },
 
     handleRefreshFileExplorer: (data) => {
         set((state) => {

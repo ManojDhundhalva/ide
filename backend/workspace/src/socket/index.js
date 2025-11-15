@@ -117,7 +117,7 @@ const socketHandlers = (io) => {
         const attachHandlers = (ptyProc) => {
             // Forward data from pty to client
             ptyProc.onData((data) => {
-                io.emit("terminal:read", data);
+                socket.emit("terminal:read", data);
             });
 
             // Handle terminal exit
@@ -127,7 +127,7 @@ const socketHandlers = (io) => {
                 attachHandlers(ptyProcess);
 
                 // Notify client
-                io.emit("terminal:read", "\r\nTerminal restarted automatically.\r\n");
+                socket.emit("terminal:read", "\r\nTerminal restarted automatically.\r\n");
             });
         };
 

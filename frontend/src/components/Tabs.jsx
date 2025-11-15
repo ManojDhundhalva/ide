@@ -5,6 +5,7 @@ export default function TabsComponent({ socket }) {
   const activeTab = useFileStore((s) => s.activeTab);
   const setActiveTab = useFileStore((s) => s.setActiveTab);
   const closeTab = useFileStore((s) => s.closeTab);
+  const fileExistsInDirectory = useFileStore((s) => s.fileExistsInDirectory);
 
   const handleTabClick = (filePath) => {
     setActiveTab(filePath, socket);
@@ -28,6 +29,8 @@ export default function TabsComponent({ socket }) {
     }}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.filePath;
+
+        if(!fileExistsInDirectory(tab.filePath)) return null;
         
         return (
           <div
@@ -68,7 +71,7 @@ export default function TabsComponent({ socket }) {
               }}
               title={tab.filePath}
             >
-              {tab.isDirty && '• '}{tab.title}
+              {tab.title}
             </span>
             
             <button
@@ -95,7 +98,7 @@ export default function TabsComponent({ socket }) {
                 e.currentTarget.style.color = '#ccc';
               }}
             >
-              X
+              <i className="fa-solid fa-xmark"></i>
             </button>
           </div>
         );

@@ -22,16 +22,13 @@ const watchFileSystem = async (io) => {
     let timeoutId = null;
     let isProcessing = false;
     
-    // Debounce delay in milliseconds (adjust as needed)
-    const DEBOUNCE_DELAY = 300; // 300ms
+    const DEBOUNCE_DELAY = 300;
     
     const debouncedRefresh = async () => {
-        // Clear any existing timeout
         if (timeoutId) {
             clearTimeout(timeoutId);
         }
         
-        // Set new timeout
         timeoutId = setTimeout(async () => {
             if (isProcessing) return;
             
@@ -51,12 +48,9 @@ const watchFileSystem = async (io) => {
 
     const watcher = fs.watch(baseDir, { recursive: true }, async (eventType, filePath) => {
         if (!filePath) return;
-        
-        // Use the debounced function instead of direct call
         debouncedRefresh();
     });
 
-    // Cleanup function
     const cleanup = () => {
         if (timeoutId) {
             clearTimeout(timeoutId);
@@ -65,28 +59,22 @@ const watchFileSystem = async (io) => {
     };
 
     process.on("exit", cleanup);
-    
-    // Optional: Also clean up on other events
     process.on("SIGINT", cleanup);
     process.on("SIGTERM", cleanup);
     
-    return cleanup; // Return cleanup function if you need to call it manually
+    return cleanup;
 };
 
 let activeConnections = 0;
 let idleTimer = null;
-
-// container will shut down if no socket connected for 10 minutes
 const IDLE_TIMEOUT = 10 * 60 * 1000; // 10 min
 
 const socketHandlers = (io) => {
     io.on("connection", async (socket) => {
-
         activeConnections++;
-
         console.log(`New client connected: ${socket.id}`);
 
-        // Clear any existing idle timer (since someone connected)
+        // Clear any existing idle timer
         if (idleTimer) {
             clearTimeout(idleTimer);
             idleTimer = null;
@@ -112,34 +100,75 @@ const socketHandlers = (io) => {
 
         await watchFileSystem(io);
 
-        let ptyProcess = await spawnTerminal();
+        // Store multiple terminal processes per socket
+        const terminals = new Map();
 
-        const attachHandlers = (ptyProc) => {
-            // Forward data from pty to client
-            ptyProc.onData((data) => {
-                socket.emit("terminal:read", data);
+        // Handle terminal creation
+        socket.on("terminal:create", async ({ terminalId }) => {
+            console.log(`Creating terminal ${terminalId} for socket ${socket.id}`);
+            
+            const ptyProcess = await spawnTerminal();
+            terminals.set(terminalId, ptyProcess);
+
+            // Forward data from pty to client with terminal ID
+            ptyProcess.onData((data) => {
+                socket.emit("terminal:read", { terminalId, data });
             });
 
-            // Handle terminal exit
-            ptyProc.onExit(async ({ exitCode, signal }) => {
-                console.log(`Terminal exited for ${socket.id}. Respawning...`);
-                ptyProcess = await spawnTerminal();
-                attachHandlers(ptyProcess);
+            // Handle terminal exit and respawn
+            ptyProcess.onExit(async ({ exitCode, signal }) => {
+                console.log(`Terminal ${terminalId} exited. Respawning...`);
+                
+                const newPtyProcess = await spawnTerminal();
+                terminals.set(terminalId, newPtyProcess);
 
-                // Notify client
-                socket.emit("terminal:read", "\r\nTerminal restarted automatically.\r\n");
+                // Reattach handlers
+                newPtyProcess.onData((data) => {
+                    socket.emit("terminal:read", { terminalId, data });
+                });
+
+                newPtyProcess.onExit(async ({ exitCode, signal }) => {
+                    console.log(`Terminal ${terminalId} exited again`);
+                });
+
+                socket.emit("terminal:read", { 
+                    terminalId, 
+                    data: "\r\nTerminal restarted automatically.\r\n" 
+                });
             });
-        };
-
-        attachHandlers(ptyProcess);
-
-        socket.on("terminal:write", (data) => {
-            if (ptyProcess) ptyProcess.write(data);
         });
 
-        socket.on("resize", ({ cols, rows }) => {
+        // Handle terminal write
+        socket.on("terminal:write", ({ terminalId, data }) => {
+            const ptyProcess = terminals.get(terminalId);
             if (ptyProcess) {
-                try { ptyProcess.resize(cols, rows); } catch (e) {}
+                ptyProcess.write(data);
+            }
+        });
+
+        // Handle terminal resize
+        socket.on("terminal:resize", ({ terminalId, cols, rows }) => {
+            const ptyProcess = terminals.get(terminalId);
+            if (ptyProcess) {
+                try { 
+                    ptyProcess.resize(cols, rows); 
+                } catch (e) {
+                    console.error(`Error resizing terminal ${terminalId}:`, e);
+                }
+            }
+        });
+
+        // Handle terminal close
+        socket.on("terminal:close", ({ terminalId }) => {
+            console.log(`Closing terminal ${terminalId}`);
+            const ptyProcess = terminals.get(terminalId);
+            if (ptyProcess) {
+                try {
+                    ptyProcess.kill();
+                } catch (e) {
+                    console.error(`Error killing terminal ${terminalId}:`, e);
+                }
+                terminals.delete(terminalId);
             }
         });
 
@@ -165,12 +194,20 @@ const socketHandlers = (io) => {
 
         socket.on("disconnect", async (reason) => {
             await saveMetadata();
-            // await saveWorkingDirectoryToCloud();
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
-            try { ptyProcess.kill(); } catch (e) {}
+            
+            // Kill all terminals for this socket
+            for (const [terminalId, ptyProcess] of terminals.entries()) {
+                try { 
+                    ptyProcess.kill(); 
+                    console.log(`Killed terminal ${terminalId}`);
+                } catch (e) {
+                    console.error(`Error killing terminal ${terminalId}:`, e);
+                }
+            }
+            terminals.clear();
 
             activeConnections--;
-            
             console.log(`Active connections: ${activeConnections}`);
 
             // Start shutdown timer if no one is connected

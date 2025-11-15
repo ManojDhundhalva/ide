@@ -88,7 +88,7 @@ export default function TabsComponent({ socket }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '12px'
+                fontSize: "smaller"
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#505050';

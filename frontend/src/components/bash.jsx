@@ -3,7 +3,7 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
 
-export default function TerminalComponent({ socket }) {
+export default function BashComponent({ terminalId, socket }) {
   const containerRef = useRef(null);
   const terminalRef = useRef(null);
   const fitAddonRef = useRef(null);
@@ -25,16 +25,28 @@ export default function TerminalComponent({ socket }) {
     terminal.loadAddon(fitAddon);
     terminal.open(containerRef.current);
 
+    // Notify server to create a new terminal process
+    socket.emit("terminal:create", { terminalId });
+
     // Wait for the next frame to ensure container is fully rendered
     requestAnimationFrame(() => {
       try {
         fitAddon.fit();
+        socket.emit("terminal:resize", { 
+          terminalId,
+          cols: terminal.cols, 
+          rows: terminal.rows 
+        });
       } catch (e) {
         console.warn("Initial fit failed, retrying...", e);
-        // Retry after a short delay if first attempt fails
         setTimeout(() => {
           try {
             fitAddon.fit();
+            socket.emit("terminal:resize", { 
+              terminalId,
+              cols: terminal.cols, 
+              rows: terminal.rows 
+            });
           } catch (err) {
             console.error("Fit failed:", err);
           }
@@ -42,14 +54,19 @@ export default function TerminalComponent({ socket }) {
       }
     });
 
-    // Handle data from server
-    const handleRead = (data) => terminal.write(data);
+    // Handle data from server for this specific terminal
+    const handleRead = ({ terminalId: tid, data }) => { 
+      if (tid === terminalId) {
+        terminal.write(data); 
+      }
+    };
 
-    // Listen for data and connection errors
     socket.on("terminal:read", handleRead);
 
-    // Send user input to server
-    terminal.onData((data) => socket.emit("terminal:write", data));
+    // Send user input to server with terminal ID
+    terminal.onData((data) => {
+      socket.emit("terminal:write", { terminalId, data });
+    });
 
     // Resize handler with safety check
     const handleResize = () => {
@@ -57,7 +74,8 @@ export default function TerminalComponent({ socket }) {
       
       try {
         fitAddonRef.current.fit();
-        socket.emit("resize", { 
+        socket.emit("terminal:resize", { 
+          terminalId,
           cols: terminalRef.current.cols, 
           rows: terminalRef.current.rows 
         });
@@ -78,7 +96,7 @@ export default function TerminalComponent({ socket }) {
     window.addEventListener("resize", handleResize);
     
     // Initial resize after a small delay
-    setTimeout(handleResize, 50);
+    setTimeout(handleResize, 100);
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -88,12 +106,12 @@ export default function TerminalComponent({ socket }) {
       terminalRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [socket]);
+  }, [socket, terminalId]);
 
   return (
     <div
       ref={containerRef}
-      id="xterm-container"
+      id={`xterm-container-${terminalId}`}
       style={{ backgroundColor: "#000", width: "100%", height: "100%" }}
     />
   );

@@ -1,100 +1,165 @@
-import { useEffect, useRef } from "react";
-import { Terminal } from "@xterm/xterm";
-import { FitAddon } from "xterm-addon-fit";
-import "xterm/css/xterm.css";
+import { useState } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import BashComponent from "./bash";
+import BashIcon from "../assets/bash.png";
 
-export default function TerminalComponent({ socket }) {
-  const containerRef = useRef(null);
-  const terminalRef = useRef(null);
-  const fitAddonRef = useRef(null);
+export default function Bash({ socket }) {
+  const [terminals, setTerminals] = useState([{ id: Date.now(), name: "bash" }]);
+  const [selectedTerminalId, setSelectedTerminalId] = useState(terminals[0]?.id);
 
-  useEffect(() => {
-    if (!containerRef.current || !socket) return;
+  const createTerminal = () => {
+    const newTerminalId = Date.now();
+    setTerminals((prev) => [...prev, { id: newTerminalId, name: "bash" }]);
+    setSelectedTerminalId(newTerminalId);
+  };
 
-    const terminal = new Terminal({ 
-      fontFamily: '"Ubuntu Mono"', 
-      fontSize: 14,
-      cursorBlink: true, 
-      convertEol: true 
-    });
-    const fitAddon = new FitAddon();
-
-    terminalRef.current = terminal;
-    fitAddonRef.current = fitAddon;
-
-    terminal.loadAddon(fitAddon);
-    terminal.open(containerRef.current);
-
-    // Wait for the next frame to ensure container is fully rendered
-    requestAnimationFrame(() => {
-      try {
-        fitAddon.fit();
-      } catch (e) {
-        console.warn("Initial fit failed, retrying...", e);
-        // Retry after a short delay if first attempt fails
-        setTimeout(() => {
-          try {
-            fitAddon.fit();
-          } catch (err) {
-            console.error("Fit failed:", err);
-          }
-        }, 100);
-      }
-    });
-
-    // Handle data from server
-    const handleRead = (data) => terminal.write(data);
-
-    // Listen for data and connection errors
-    socket.on("terminal:read", handleRead);
-
-    // Send user input to server
-    terminal.onData((data) => socket.emit("terminal:write", data));
-
-    // Resize handler with safety check
-    const handleResize = () => {
-      if (!fitAddonRef.current || !terminalRef.current) return;
-      
-      try {
-        fitAddonRef.current.fit();
-        socket.emit("resize", { 
-          cols: terminalRef.current.cols, 
-          rows: terminalRef.current.rows 
-        });
-      } catch (e) {
-        console.warn("Resize fit failed:", e);
-      }
-    };
-
-    // Use ResizeObserver for more accurate container size changes
-    const resizeObserver = new ResizeObserver(() => {
-      handleResize();
-    });
-
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    window.addEventListener("resize", handleResize);
+  const closeTerminal = (terminalId, e) => {
+    e.stopPropagation();
     
-    // Initial resize after a small delay
-    setTimeout(handleResize, 50);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      resizeObserver.disconnect();
-      socket.off("terminal:read", handleRead);
-      terminal.dispose();
-      terminalRef.current = null;
-      fitAddonRef.current = null;
-    };
-  }, [socket]);
+    setTerminals((prev) => {
+      const filtered = prev.filter(t => t.id !== terminalId);
+      
+      // If closing the selected terminal, switch to another
+      if (selectedTerminalId === terminalId && filtered.length > 0) {
+        setSelectedTerminalId(filtered[filtered.length - 1].id);
+      }
+      
+      // Emit socket event to kill the terminal process
+      socket.emit("terminal:close", { terminalId });
+      
+      return filtered;
+    });
+  };
 
   return (
-    <div
-      ref={containerRef}
-      id="xterm-container"
-      style={{ backgroundColor: "#000", width: "100%", height: "100%" }}
-    />
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <PanelGroup direction="horizontal" style={{ flex: 1 }}>
+        <Panel defaultSize={80} minSize={20} maxSize={90} className="sidebar-panel">
+          {terminals.length === 0 ? <h1><b>BASH</b></h1> :
+          terminals.map(terminal => (
+            <div 
+            key={terminal.id} 
+              style={{ 
+                display: terminal.id === selectedTerminalId ? 'block' : 'none',
+                height: '100%'
+              }}
+              >
+              <BashComponent 
+                socket={socket} 
+                terminalId={terminal.id}
+                />
+            </div>
+          ))
+          }
+        </Panel>
+        
+        <PanelResizeHandle className="resize-handle horizontal" />
+
+        <Panel defaultSize={20} minSize={10} maxSize={80} className="sidebar-panel">
+          <div className="panel-content" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <div 
+              className="panel-header" 
+              style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+              }}
+            >
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src={BashIcon} alt="bash-icon" style={{ width: '16px', height: '16px' }}/> 
+                Bash
+              </h3>
+              <button
+                onClick={createTerminal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ccc',
+                  cursor: 'pointer',
+                  borderRadius: '3px',
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#505050';
+                  e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#ccc';
+                }}
+                title="New Terminal"
+              >
+                <i className="fa-solid fa-plus"></i>
+              </button>
+            </div>
+            
+            {/* Terminal List */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {terminals.map((terminal, index) => (
+                <div
+                  key={terminal.id}
+                  onClick={() => setSelectedTerminalId(terminal.id)}
+                  style={{
+                    padding: '1px 10px',
+                    cursor: 'pointer',
+                    backgroundColor: terminal.id === selectedTerminalId ? '#4D4D4D' : 'transparent',
+                    color: terminal.id === selectedTerminalId ? 'rgba(220, 220, 220, 1)' : 'transparent',
+                    borderLeft: terminal.id === selectedTerminalId ? '2px solid #ffffffff' : '2px solid transparent',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    fontSize: "smaller",
+                    color: '#d3d3d3ff',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (terminal.id !== selectedTerminalId) {
+                      e.currentTarget.style.backgroundColor = '#2a2d2e';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (terminal.id !== selectedTerminalId) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <span style={{color: terminal.id === selectedTerminalId ? 'rgba(230, 230, 230, 1)' : 'rgba(180, 180, 180, 1)'}}>
+                    <i className="fa-solid fa-terminal" style={{ marginRight: '8px', fontSize: "smaller" }}></i>
+                    {terminal.name}@{index + 1}
+                  </span>
+                  <button
+                    onClick={(e) => closeTerminal(terminal.id, e)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'rgba(180, 180, 180, 1)',
+                      cursor: 'pointer',
+                      padding: '2px 4px',
+                      fontSize: '12px',
+                      borderRadius: '3px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#505050';
+                      e.currentTarget.style.color = 'rgba(230, 230, 230, 1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = 'rgba(180, 180, 180, 1)';
+                    }}
+                    title="Kill Terminal"
+                  >
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Panel>
+      </PanelGroup>
+   </div>
   );
 }

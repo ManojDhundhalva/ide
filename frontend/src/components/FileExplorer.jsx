@@ -77,6 +77,14 @@ export default function FileExplorerComponent({ socket }) {
             <div>
               <div
                 onClick={() => handleFolderClick(path, entry.name)}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(40, 40, 40, 1)',
+                  e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = isExpanded ? 'rgba(40, 40, 40, 1)' : 'transparent',
+                  e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
+                }}
                 style={{
                   color: "rgba(220, 220, 220, 1)",
                   cursor: 'pointer',
@@ -112,6 +120,14 @@ export default function FileExplorerComponent({ socket }) {
             </div>
           ) : (
             <div
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = activeFile === fullPath ? 'rgba(77, 77, 77, 1)' : 'rgba(40, 40, 40, 1)'
+                // e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = activeFile === fullPath ? 'rgba(77, 77, 77, 1)' : "transparent"
+                // e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
+              }}
               onClick={() => handleFileClick(path, entry.name)}
               style={{
                 cursor: 'pointer',

@@ -69,10 +69,10 @@ export const getFileContent = async (req, res) => {
 
 export const saveFileContent = async (req, res) => {
     const requested = req.query.path;
-    const { content } = req.body;
+    const { content = ""} = req.body;
     const targetPath = await getFullPath(requested);
 
-    if (!requested || !content) {
+    if (!requested) {
         return res.status(400).json({ message: "Path and content are required." });
     }
 

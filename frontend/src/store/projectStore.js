@@ -16,9 +16,6 @@ export const useProjectStore = create((set) => ({
     createProjectLoading: false,
     createProjectError: null,
 
-    updateProjectLoading: false,
-    updateProjectError: null,
-
     deleteProjectLoading: false,
     deleteProjectError: null,
 
@@ -74,27 +71,6 @@ export const useProjectStore = create((set) => ({
             console.error("CreateProject Error:", errorMsg);
         } finally {
             set({ createProjectLoading: false });
-        }
-    },
-
-    updateProject: async (projectId, content) => {
-        try {
-            set({ updateProjectLoading: true, updateProjectError: null });
-
-            await api.put(`/project/${projectId}`, content);
-
-            set((state) => ({
-                projects: state.projects.map((p) =>
-                    p.id === projectId ? data.project : p
-                ),
-            }));
-
-        } catch (error) {
-            const errorMsg = error.response?.data?.message || error.message || "Failed to update project";
-            set({ updateProjectError: errorMsg });
-            console.error("UpdateProject Error:", errorMsg);
-        } finally {
-            set({ updateProjectLoading: false });
         }
     },
 

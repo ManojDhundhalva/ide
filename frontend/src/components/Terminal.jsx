@@ -114,7 +114,7 @@ export default function Bash({ socket }) {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     fontSize: "smaller",
-                    color: '#d3d3d3ff',
+                    // color: '#d3d3d3ff',
                   }}
                   onMouseEnter={(e) => {
                     if (terminal.id !== selectedTerminalId) {
@@ -152,7 +152,7 @@ export default function Bash({ socket }) {
                     }}
                     title="Kill Terminal"
                   >
-                    <i class="fa-regular fa-trash-can"></i>
+                    <i className="fa-regular fa-trash-can"></i>
                   </button>
                 </div>
               ))}

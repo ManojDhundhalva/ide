@@ -108,7 +108,7 @@ export default function Bash({ socket }) {
                     padding: '1px 10px',
                     cursor: 'pointer',
                     backgroundColor: terminal.id === selectedTerminalId ? '#4D4D4D' : 'transparent',
-                    color: terminal.id === selectedTerminalId ? 'rgba(240, 240, 240, 1)' : 'transparent',
+                    color: terminal.id === selectedTerminalId ? 'rgba(220, 220, 220, 1)' : 'transparent',
                     borderLeft: terminal.id === selectedTerminalId ? '2px solid #ffffffff' : '2px solid transparent',
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -127,7 +127,7 @@ export default function Bash({ socket }) {
                     }
                   }}
                 >
-                  <span style={{color: terminal.id === selectedTerminalId ? 'rgba(240, 240, 240, 1)' : 'rgba(180, 180, 180, 1)'}}>
+                  <span style={{color: terminal.id === selectedTerminalId ? 'rgba(230, 230, 230, 1)' : 'rgba(180, 180, 180, 1)'}}>
                     <i className="fa-solid fa-terminal" style={{ marginRight: '8px', fontSize: "smaller" }}></i>
                     {terminal.name}@{index + 1}
                   </span>

@@ -1,0 +1,161 @@
+.workspace-container {
+  width: 100vw;
+  height: 100vh;
+  background: #1e1e1e;
+  color: #ffffff;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: small;
+  overflow: hidden;
+}
+
+/* Panel Styles */
+.panel-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  overflow: hidden;
+}
+
+.panel-header {
+  background: #2d2d2d;
+  padding: 4px 12px;
+  border-bottom: 1px solid #3e3e3e;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cccccc;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-panel {
+  background: #333333;
+  border-right: 1px solid #3e3e3e;
+}
+
+/* Main Content Panel */
+.main-content-panel {
+  background: #1e1e1e;
+  overflow: hidden;
+}
+
+/* Tabs Panel */
+.tabs-panel {
+  background: #000000;
+}
+
+/* Editor Panel */
+.editor-panel {
+  background: #1e1e1e;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editor-panel-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.editor-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Terminal Panel */
+.terminal-panel {
+  background: #1e1e1e;
+  border-top: 1px solid #3e3e3e;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Resize Handle Styles */
+.resize-handle {
+  background: transparent;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.resize-handle:hover {
+  background: #007acc;
+}
+
+.resize-handle.horizontal {
+  width: 4px;
+  cursor: col-resize;
+}
+
+.resize-handle.vertical {
+  height: 4px;
+  cursor: row-resize;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #007acc;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.resize-handle.horizontal::before {
+  width: 2px;
+  height: 20px;
+}
+
+.resize-handle.vertical::before {
+  width: 20px;
+  height: 2px;
+}
+
+.resize-handle:hover::before,
+.resize-handle[data-resize-handle-active]::before {
+  opacity: 1;
+}
+
+/* Scrollbar Styling */
+.panel-content ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.panel-content ::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.panel-content ::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+.panel-content ::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .workspace-container {
+    flex-direction: column;
+  }
+  
+  .panel-header h3 {
+    font-size: 10px;
+  }
+}

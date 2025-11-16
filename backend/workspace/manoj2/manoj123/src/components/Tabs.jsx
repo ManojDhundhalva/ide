@@ -1,5 +1,4 @@
 import { useFileStore } from '../store/fileStore';
-import { getFileIcon } from "../utils/language";
 
 export default function TabsComponent({ socket }) {
   const tabs = useFileStore((s) => s.tabs);
@@ -39,14 +38,13 @@ export default function TabsComponent({ socket }) {
             onClick={() => handleTabClick(tab.filePath)}
             style={{
               display: 'flex',
-              justifyContent: "space-between",
               alignItems: 'center',
               padding: '6px 10px',
               backgroundColor: isActive ? '#1e1e1e' : '#2d2d2d',
               borderRight: '1px solid #3e3e3e',
               cursor: 'pointer',
               minWidth: '120px',
-              maxWidth: '200px',
+              maxWidth: '160px',
               fontSize: '13px',
               color: isActive ? '#fff' : '#ccc',
               userSelect: 'none',
@@ -63,27 +61,20 @@ export default function TabsComponent({ socket }) {
               }
             }}
           >
-            <div style={{display:"flex", justifyContent: "flex-start", alignItems:"center"}}>
-              <div style={{ width: "14px", justifyContent: "center", alignItems: "center" }}>
-                {(() => {
-                    const { icon, color } = getFileIcon(tab.title);
-                    return <i className={`${icon} fa-sm`} style={{ color, fontSize: "smaller"}}></i>;
-                })()}
-              </div>
-              <span
-                style={{
-                  fontSize: "smaller",
-                  flex: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  marginLeft: '6px'
-                }}
-                title={tab.filePath}
-              >
-                {tab.title}
-              </span>
-            </div>
+            <span
+              style={{
+                fontSize: "small",
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                marginRight: '8px'
+              }}
+              title={tab.filePath}
+            >
+              {tab.title}
+            </span>
+            
             <button
               onClick={(e) => handleTabClose(tab.filePath, e)}
               style={{
@@ -97,8 +88,7 @@ export default function TabsComponent({ socket }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: "smaller",
-                marginLeft: '8px'
+                fontSize: "smaller"
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#505050';

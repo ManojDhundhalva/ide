@@ -96,7 +96,7 @@ export default function BashComponent({ terminalId, socket }) {
     window.addEventListener("resize", handleResize);
     
     // Initial resize after a small delay
-    setTimeout(handleResize, 50);
+    setTimeout(handleResize, 100);
 
     return () => {
       window.removeEventListener("resize", handleResize);

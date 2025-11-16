@@ -48,7 +48,11 @@ export default function CodeEditorComponent() {
         debouncedSave(value);
     };
 
-    if(tabs.length === 0) return <h1>Editor</h1>;
+    useEffect(() => {
+        console.log("currentFilePath", currentFilePath);
+    }, []);
+
+    if(tabs.length === 0) return null;
 
     return (
         <div style={{ flex: 1, background: '#1e1e1e' }}>

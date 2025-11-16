@@ -44,10 +44,12 @@ export const useFileStore = create((set, get) => ({
     },  
   
     closeTab: (filePath, socket) => {
-        const { tabs, activeTab, fileExistsInDirectory } = get();
+        const { tabs, activeTab } = get();
         
-        const newTabs = tabs.filter((tab) => tab.filePath !== filePath && fileExistsInDirectory(tab.filePath));
+        const newTabs = tabs.filter((tab) => tab.filePath !== filePath);
         
+        let newActiveTab = activeTab;
+
         if (activeTab === filePath) {
 
             const currentIndex = tabs.findIndex(tab => tab.filePath === filePath);
@@ -55,21 +57,18 @@ export const useFileStore = create((set, get) => ({
             if (newTabs.length > 0) {
 
                 const nextTab = newTabs[Math.min(currentIndex, newTabs.length - 1)];
-                const newActiveTab = nextTab.filePath;
+                newActiveTab = nextTab.filePath;
                 socket.emit("tabs:set-active-tab", { path: newActiveTab });
-
-                set({ 
-                    tabs: newTabs,
-                    activeTab: newActiveTab
-                });
             
             } else {
-                set({ tabs: [], activeTab: null });
-                socket.emit("tabs:set-active-tab", { path: null });
+                newActiveTab = null;
             }
-        } else {
-            set({ tabs: newTabs });
         }
+        
+        set({ 
+            tabs: newTabs,
+            activeTab: newActiveTab
+        });
 
         socket.emit("tabs:close-tab", { path: filePath });
     },

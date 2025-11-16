@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFileStore } from "../store/fileStore"; 
 import { useProjectStore } from "../store/projectStore";
-import { getFileIcon } from "../utils/language";
 
 import { CircularProgress } from "@mui/material";
 
@@ -73,7 +72,7 @@ export default function FileExplorerComponent({ socket }) {
       const isCurrentFileLoading = getFileContentLoading && getFileContentFilePath === fullPath;
       
       return (
-        <div key={fullPath} style={{ marginLeft: `${level ? level + 6 : 0}px`, marginTop: "2px" }}>
+        <div key={fullPath} style={{ marginLeft: `${level * 10}px`, marginTop: "2px" }}>
           {entry.type === 'directory' ? (
             <div>
               <div
@@ -104,8 +103,8 @@ export default function FileExplorerComponent({ socket }) {
                 }}
               >
                 <div>
-                  {isExpanded ? <i className="fa-solid fa-folder-open fa-sm" style={{width:"16px", color:"#6ECFF8"}}></i> : <i className="fa-solid fa-folder fa-sm" style={{width:"16px", color:"#6ECFF8"}}></i>}
-                  <span style={{paddingLeft:"4px"}}>{entry.name}</span>
+                {isExpanded ? <i className="fa-solid fa-folder-open fa-sm" style={{width:"16px", color:"#6ECFF8"}}></i> : <i className="fa-solid fa-folder fa-sm" style={{width:"16px", color:"#6ECFF8"}}></i>}
+                <span style={{paddingLeft:"2px"}}>{entry.name}</span>
                 </div>
                 {isCurrentDirectoryLoading && 
                   <CircularProgress
@@ -142,13 +141,10 @@ export default function FileExplorerComponent({ socket }) {
               }}
             >
               <div style={{display:"flex"}}>
-                <div style={{ width: "14px", justifyContent: "center", alignItems: "center" }}>
-                  {(() => {
-                      const { icon, color } = getFileIcon(entry.name);
-                      return <i className={`${icon} fa-sm`} style={{ color }}></i>;
-                  })()}
+                <div style={{width:"14px", justifyContent:"center",alignItems:"center"}}>
+                  <i className="fa-solid fa-file-lines fa-sm" style={{color: "#53D497"}}></i>
                 </div>
-                <span style={{ paddingLeft:"4px", textOverflow:"clip"}}>{entry.name}</span>
+                <span style={{paddingLeft:"2px"}}>{entry.name}</span>
               </div>
               <div>
               {isCurrentFileLoading && 

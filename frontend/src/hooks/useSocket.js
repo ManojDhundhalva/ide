@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import config from '../config';
 
-export const useSocket = ({ projectId }) => {
+export const useSocket = ({ sessionToken, projectId }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export const useSocket = ({ projectId }) => {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      auth: { projectId }
+      auth: { sessionToken, projectId }
     });
 
     setSocket(socketInstance);

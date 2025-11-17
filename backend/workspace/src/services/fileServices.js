@@ -3,7 +3,7 @@ import { api } from "../config/api.js";
 
 export const saveMetadata = async () => {
     try {
-        const cookie = await redisGet("user:cookie");
+        const sessionToken = await redisGet("user:sessionToken");
         const projectId = await redisGet("user:project:projectId");
 
         if (!projectId) {
@@ -11,8 +11,8 @@ export const saveMetadata = async () => {
             return;
         }
 
-        if (!cookie) {
-            console.error("saveMetadata: missing cookie — skipping save");
+        if (!sessionToken) {
+            console.error("saveMetadata: missing sessionToken — skipping save");
             return;
         }
 
@@ -20,7 +20,7 @@ export const saveMetadata = async () => {
         const tabList = await redisSetGetAll("user:project:tabList");
         const activeTab = await redisGet("user:project:activeTab");
 
-        await api.put(`/project/metadata/${projectId}`, { expandedDirectories, tabs: { tabList, activeTab } }, { headers: { Cookie: cookie } });
+        await api.put(`/project/metadata/${projectId}`, { expandedDirectories, tabs: { tabList, activeTab } }, { headers: { "X-SESSION-TOKEN": sessionToken } });
     } catch (error) {
         const errorMsg = error.response?.data?.message || error.message || "Failed to save metadata to DB";
         console.error("Error while saving metadata:", errorMsg);

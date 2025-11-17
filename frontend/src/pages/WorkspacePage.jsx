@@ -17,12 +17,14 @@ import "../css/WorkspacePage.css";
 const WorkspacePage = () => {
   const { id: projectId } = useParams();
 
-  const socket = useSocket({ projectId });
+  const socket = useSocket({ 
+    sessionToken: window.localStorage.getItem("session-token"), 
+    projectId 
+  });
 
   const initFiles = useFileStore((s) => s.initFiles);
   const initTabs = useFileStore((s) => s.initTabs);
 
-  const project = useProjectStore((s) => s.project);
   const getProject = useProjectStore((s) => s.getProject);
 
   const [fetching, setFetching] = useState(true);

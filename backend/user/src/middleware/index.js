@@ -32,7 +32,7 @@ export const isOwner = async (req, res, next) => {
 
 export const isAuthenticated = async (req, res, next) => {
     try {
-        const sessionToken = req.cookies["SESSION-TOKEN"];
+        const sessionToken = req.headers["x-session-token"];
 
         if (!sessionToken) {
             return res.status(401).json({ message: "Authentication token missing" });

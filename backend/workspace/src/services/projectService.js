@@ -4,8 +4,8 @@ import { createFolderToBaseDir } from "../utils/files.js";
 
 export const getProject = async (projectId) => {
     try {
-        const cookie = await redisGet("user:cookie");
-        const { data } = await api.get(`/project/${projectId}`, { headers: { Cookie: cookie } });
+        const sessionToken = await redisGet("user:sessionToken");
+        const { data } = await api.get(`/project/${projectId}`, { headers: { "X-SESSION-TOKEN": sessionToken } });
 
         await redisSet("user:project:userId", data.project.userId);
         await redisSet("user:project:projectId", data.project._id);

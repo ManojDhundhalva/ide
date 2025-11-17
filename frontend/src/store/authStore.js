@@ -39,6 +39,8 @@ export const useAuthStore = create((set) => ({
                 isAuthenticated: true,
             });
 
+            window.localStorage.setItem("session-token", data.sessionToken);
+
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || "Authentication failed";
             set({ authenticationError: errorMsg });
@@ -63,6 +65,8 @@ export const useAuthStore = create((set) => ({
                 },
                 isAuthenticated: false,
             });
+
+            window.localStorage.removeItem("session-token");
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || "Logout failed";

@@ -3,7 +3,7 @@ import { useFileStore } from "../store/fileStore";
 import { useProjectStore } from "../store/projectStore";
 import { getFileIcon } from "../utils/language";
 
-import { CircularProgress } from "@mui/material";
+import { CircularProgress, Tooltip } from "@mui/material";
 
 export default function FileExplorerComponent({ socket }) {
   
@@ -77,6 +77,7 @@ export default function FileExplorerComponent({ socket }) {
           {entry.type === 'directory' ? (
             <div>
               <div
+                title={fullPath}
                 onClick={() => handleFolderClick(path, entry.name)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(40, 40, 40, 1)',
@@ -120,6 +121,30 @@ export default function FileExplorerComponent({ socket }) {
               {isExpanded && renderFileTree(fullPath, level + 1)}
             </div>
           ) : (
+        //     <Tooltip
+        //     title={fullPath}
+        //     leaveDelay={0}
+        //     enterDelay={500}
+        //     placement="right-end"
+        //     arrow
+        //     componentsProps={{
+        //         tooltip: {
+        //             sx: {
+        //                 fontSize: "x-small",
+        //                 fontFamily: "inter",
+        //                 border: "1px solid black",
+        //                 bgcolor: "rgba(234, 234, 234, 1)",
+        //                 color: "black",
+        //                 transition: "none",
+        //             },
+        //         },
+        //         arrow: {
+        //             sx: {
+        //                 color: "white",
+        //             },
+        //         },
+        //     }}
+        // >
             <div
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = activeFile === fullPath ? 'rgba(77, 77, 77, 1)' : 'rgba(40, 40, 40, 1)'
@@ -148,7 +173,7 @@ export default function FileExplorerComponent({ socket }) {
                       return <i className={`${icon} fa-sm`} style={{ color }}></i>;
                   })()}
                 </div>
-                <span style={{ paddingLeft:"4px", textOverflow:"clip"}}>{entry.name}</span>
+                <span style={{ paddingLeft:"4px", textOverflow:"clip", color:"#e7e7e7ff"}}>{entry.name}</span>
               </div>
               <div>
               {isCurrentFileLoading && 
@@ -162,6 +187,7 @@ export default function FileExplorerComponent({ socket }) {
                 />}
               </div>
             </div>
+            // </Tooltip>
           )}
         </div>
       );

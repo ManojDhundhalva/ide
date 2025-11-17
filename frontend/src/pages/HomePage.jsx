@@ -187,13 +187,15 @@ const HomePage = () => {
                 background: "none",
                 cursor: "pointer",
                 padding: 0,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center"
               }}
             >
               {user.image ? (
                 <img
                   src={user.image}
                   alt={user.name}
-                  crossOrigin="anonymous"
                   referrerPolicy="no-referrer"
                   onError={(e) => e.target.src = DefaultProfileImg}
                   style={{

@@ -80,9 +80,9 @@ const socketHandlers = (io) => {
             idleTimer = null;
         }
 
-        await redisSet("user:cookie", socket.handshake.headers?.cookie || "");
-
-        const { projectId } = socket.handshake.auth;
+        await redisSet("user:sessionToken", socket.handshake?.auth?.sessionToken || "");
+        
+        const { projectId } = socket.handshake?.auth;
 
         if (!projectId) {
             console.error('No projectId provided during socket connection');

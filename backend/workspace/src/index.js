@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import http from "http";
 
 import connectRedis from "./config/redis.js";
@@ -22,7 +21,6 @@ socketHandlers(io);
 app.use(cors(corsConfig));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
 app.use("/", router());
 

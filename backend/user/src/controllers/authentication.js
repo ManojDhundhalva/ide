@@ -56,20 +56,13 @@ export const authenticate = async (req, res) => {
     const sessionToken = generateSessionToken(user._id.toString());
 
     try {
-        await redisSet(`session:${sessionToken}`, user, 24 * 60 * 60);
+        await redisSet(`session:${sessionToken}`, user);
         user.sessionToken = sessionToken;
         await user.save();
     } catch (error) {
         console.error("Authentication error:", error);
         return res.status(502).json({ message: "Failed to generate and save session token" });   
     }
-
-    res.cookie("SESSION-TOKEN", user.sessionToken, { 
-        domain: "localhost", 
-        path: "/", 
-        // sameSite: "none",
-        maxAge: 24 * 60 * 60 * 1000 
-    });
 
     const userData = {
         id: user._id,
@@ -78,23 +71,14 @@ export const authenticate = async (req, res) => {
         image: user.image,
     };
 
-    return res.status(200).json({ message: "Authentication successful", user: userData });
+    return res.status(200).json({ message: "Authentication successful", user: userData, sessionToken: user.sessionToken });
 };
 
 export const logout = async(req, res) => {
-
-    const sessionToken = req.cookies["SESSION-TOKEN"];
+    const sessionToken = req.headers["x-session-token"];
 
     if(sessionToken) {
-
         await redisDel(`session:${sessionToken}`);
-
-        res.cookie("SESSION-TOKEN", "", { 
-            domain: "localhost", 
-            path: "/", 
-            // sameSite: "none",
-            expires: new Date(0), 
-        });
     }
 
     return res.status(200).json({ message: "Logged out successfully" });

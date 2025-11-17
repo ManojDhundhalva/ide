@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { getCookie } from "../utils/cookies";
 
 const ProtectedRoute = ({ Component }) => {
     const navigate = useNavigate();
@@ -11,7 +10,8 @@ const ProtectedRoute = ({ Component }) => {
 
     useEffect(() => {
         const authenticateUser = () => {
-            if (!getCookie('SESSION-TOKEN')) navigate("/auth");
+            const sessionToken = window.localStorage.getItem("session-token");
+            if (!sessionToken) navigate("/auth");
             else fetchUser();
         };
 

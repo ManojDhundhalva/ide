@@ -95,3 +95,12 @@ export const saveFileContent = async (req, res) => {
         return res.status(500).json({ message: "Failed to write file", path: requested });
     }
 };
+
+export const uploadFiles = async (req, res) => {
+    try {
+        res.status(200).json({ message: "Uploaded successfully" });
+    } catch (error) {
+        console.error('Upload error:', error);
+        res.status(500).json({ message: error.message || "Failed to upload files" });
+    }
+};

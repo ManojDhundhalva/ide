@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useFileStore } from "../store/fileStore"; 
 import { useProjectStore } from "../store/projectStore";
 import { getFileIcon } from "../utils/language";
-
-import { CircularProgress, Tooltip } from "@mui/material";
+import { CircularProgress } from "@mui/material";
+import UploadDialog from "./UploadDialog";
 
 export default function FileExplorerComponent({ socket }) {
   
@@ -22,6 +22,10 @@ export default function FileExplorerComponent({ socket }) {
 
   const project = useProjectStore((s) => s.project);
   const [expandedFolders, setExpandedFolders] = useState(new Set(project?.metadata?.expandedDirectories));
+  
+  const [hoveredFolder, setHoveredFolder] = useState(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadTargetPath, setUploadTargetPath] = useState("");
 
   const handleFolderClick = async (folderPath, folderName) => {
     const fullPath = folderPath ? `${folderPath}/${folderName}` : folderName;
@@ -52,6 +56,12 @@ export default function FileExplorerComponent({ socket }) {
     openTab(fullPath, socket);
   };
 
+  const handleUploadClick = (e, folderPath) => {
+    e.stopPropagation();
+    setUploadTargetPath(folderPath);
+    setUploadDialogOpen(true);
+  };
+
   useEffect(() => {
     if(!socket) return;
 
@@ -71,6 +81,7 @@ export default function FileExplorerComponent({ socket }) {
       const isExpanded = expandedFolders.has(fullPath);
       const isCurrentDirectoryLoading = getFilesLoading && getFilesDirectoryPath === fullPath;
       const isCurrentFileLoading = getFileContentLoading && getFileContentFilePath === fullPath;
+      const isHovered = hoveredFolder === fullPath;
       
       return (
         <div key={fullPath} style={{ marginLeft: `${level ? level + 6 : 0}px`, marginTop: "2px" }}>
@@ -80,11 +91,13 @@ export default function FileExplorerComponent({ socket }) {
                 title={fullPath}
                 onClick={() => handleFolderClick(path, entry.name)}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(40, 40, 40, 1)',
+                  setHoveredFolder(fullPath);
+                  e.currentTarget.style.backgroundColor = 'rgba(40, 40, 40, 1)';
                   e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = isExpanded ? 'rgba(40, 40, 40, 1)' : 'transparent',
+                  setHoveredFolder(null);
+                  e.currentTarget.style.backgroundColor = isExpanded ? 'rgba(40, 40, 40, 1)' : 'transparent';
                   e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
                 }}
                 style={{
@@ -104,55 +117,67 @@ export default function FileExplorerComponent({ socket }) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                <div>
-                  {isExpanded ? <i className="fa-solid fa-folder-open fa-sm" style={{width:"16px", color:"#6ECFF8"}}></i> : <i className="fa-solid fa-folder fa-sm" style={{width:"16px", color:"#6ECFF8"}}></i>}
-                  <span style={{paddingLeft:"4px"}}>{entry.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1 }}>
+                  {isExpanded ? 
+                    <i className="fa-solid fa-folder-open fa-sm" style={{width:"16px", color:"#6ECFF8", flexShrink: 0}}></i> : 
+                    <i className="fa-solid fa-folder fa-sm" style={{width:"16px", color:"#6ECFF8", flexShrink: 0}}></i>
+                  }
+                  <span style={{paddingLeft:"4px", overflow: 'hidden', textOverflow: 'ellipsis'}}>{entry.name}</span>
                 </div>
-                {isCurrentDirectoryLoading && 
-                  <CircularProgress
-                    size={10}
-                    thickness={6}
-                    sx={{
-                      color: "white",
-                      '& circle': { strokeLinecap: 'round' },
-                    }}
-                  />}
+                
+                <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                  {isHovered && (
+                    <button
+                      onClick={(e) => handleUploadClick(e, fullPath)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#ccc',
+                        cursor: 'pointer',
+                        borderRadius: '10px',
+                        width: '16px',
+                        height: '16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: "0px 0px",
+                        fontSize: "smaller"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#505050';
+                        e.currentTarget.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = '#ccc';
+                      }}
+                      title="Upload files"
+                    >
+                      <i className="fa-solid fa-arrow-up-from-bracket" style={{width:"10px", color:"#388aaeff", flexShrink: 0}}></i>
+                    </button>
+                  )}
+                  
+                  {isCurrentDirectoryLoading && 
+                    <CircularProgress
+                      size={10}
+                      thickness={6}
+                      sx={{
+                        color: "white",
+                        '& circle': { strokeLinecap: 'round' },
+                      }}
+                    />
+                  }
+                </div>
               </div>
               {isExpanded && renderFileTree(fullPath, level + 1)}
             </div>
           ) : (
-        //     <Tooltip
-        //     title={fullPath}
-        //     leaveDelay={0}
-        //     enterDelay={500}
-        //     placement="right-end"
-        //     arrow
-        //     componentsProps={{
-        //         tooltip: {
-        //             sx: {
-        //                 fontSize: "x-small",
-        //                 fontFamily: "inter",
-        //                 border: "1px solid black",
-        //                 bgcolor: "rgba(234, 234, 234, 1)",
-        //                 color: "black",
-        //                 transition: "none",
-        //             },
-        //         },
-        //         arrow: {
-        //             sx: {
-        //                 color: "white",
-        //             },
-        //         },
-        //     }}
-        // >
             <div
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = activeFile === fullPath ? 'rgba(77, 77, 77, 1)' : 'rgba(40, 40, 40, 1)'
-                // e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = activeFile === fullPath ? 'rgba(77, 77, 77, 1)' : "transparent"
-                // e.currentTarget.style.color = 'rgba(220, 220, 220, 1)';
               }}
               onClick={() => handleFileClick(path, entry.name)}
               style={{
@@ -187,7 +212,6 @@ export default function FileExplorerComponent({ socket }) {
                 />}
               </div>
             </div>
-            // </Tooltip>
           )}
         </div>
       );
@@ -203,14 +227,22 @@ export default function FileExplorerComponent({ socket }) {
   }
 
   return (
-    <div style={{ flex: 1, overflow: 'auto' }}>
-      {getFilesLoading && !fileTree.size && (
-        <div>Loading files...</div>
-      )}
-      
-      <div style={{ padding: '8px', height: "100%", width: "100%" }}>
-        {renderFileTree()}
+    <>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        {getFilesLoading && !fileTree.size && (
+          <div>Loading files...</div>
+        )}
+        
+        <div style={{ padding: '8px', height: "100%", width: "100%" }}>
+          {renderFileTree()}
+        </div>
       </div>
-    </div>
+
+      <UploadDialog
+        open={uploadDialogOpen}
+        onClose={() => setUploadDialogOpen(false)}
+        targetPath={uploadTargetPath}
+      />
+    </>
   );
 };

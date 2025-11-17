@@ -4,7 +4,8 @@ const { get, merge } = pkg;
 
 import { getUserBySessionToken } from "../services/userService.js";
 import { getUserIdByProjectId } from '../services/projectService.js';
-import { redisGet, redisSet } from "../services/redisService.js";
+
+import cache from "../utils/cache.js";
 
 export const isOwner = async (req, res, next) => {
     try {
@@ -38,7 +39,7 @@ export const isAuthenticated = async (req, res, next) => {
             return res.status(401).json({ message: "Authentication token missing" });
         }
 
-        let existingUser = await redisGet(`session:${sessionToken}`);
+        let existingUser = cache.get(`session:${sessionToken}`); 
 
         if(!existingUser) {
 
@@ -48,7 +49,7 @@ export const isAuthenticated = async (req, res, next) => {
                 return res.status(403).json({ message: "Invalid or expired session token" });
             }
             
-            await redisSet(`session:${sessionToken}`, existingUser, 60 * 60 * 24); // 1 day
+            cache.set(`session:${sessionToken}`, existingUser);
         }
 
         merge(req, { identity: existingUser });

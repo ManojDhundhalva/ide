@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 
 import corsConfig from "./config/cors.js";
-import initializeServer from "./config/server.js";
+import connectDB from "./config/db.js";
+import config from "./config/index.js";
 
 import router from "./routes/index.js";
 
@@ -16,4 +17,8 @@ app.use("/", router());
 
 app.get("/", (_, res) => res.send("Hello, World!"));
 
-initializeServer(app);
+connectDB().then(() => {
+    app.listen(config.PORT, () => { 
+        console.log(`🚀 Server is listening on http://localhost:${config.PORT}`)
+    });
+});

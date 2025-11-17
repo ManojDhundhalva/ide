@@ -1,7 +1,8 @@
 import { createUser, getUserByEmail, isUserExistsByEmail } from "../services/userService.js";
 import { fetchGoogleProfile } from "../services/googleService.js";
-import { redisDel, redisSet } from "../services/redisService.js";
 import { generateSessionToken } from "../helper/index.js";
+
+import cache from "../utils/cache.js";
 
 export const authenticate = async (req, res) => {
 
@@ -56,7 +57,7 @@ export const authenticate = async (req, res) => {
     const sessionToken = generateSessionToken(user._id.toString());
 
     try {
-        await redisSet(`session:${sessionToken}`, user);
+        cache.set(`session:${sessionToken}`, user);
         user.sessionToken = sessionToken;
         await user.save();
     } catch (error) {
@@ -78,7 +79,8 @@ export const logout = async(req, res) => {
     const sessionToken = req.headers["x-session-token"];
 
     if(sessionToken) {
-        await redisDel(`session:${sessionToken}`);
+        cache.delete(`session:${sessionToken}`);
+        cache.delete(`projects:${userId}`);
     }
 
     return res.status(200).json({ message: "Logged out successfully" });

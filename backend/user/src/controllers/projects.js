@@ -4,13 +4,14 @@ import {
     createNewProject, 
     addProjectToUser, 
     isAlreadyExistsProject, 
-    updateProjectDetails, 
     deletedProjectByProjectId, 
     syncUserForProjectDelete,
     updateMetadataOfProject,
 } from "../services/projectService.js";
-import { redisGet, redisSet, redisDel } from "../services/redisService.js";
+
 // import { startProjectContainer } from "../utils/aws.js";
+
+import cache from "../utils/cache.js";
 
 export const getProject = async (req, res) => {
     try {
@@ -29,11 +30,11 @@ export const getAllProjectsOfUser = async (req, res) => {
     try {
         const { _id: userId } = req.identity;
 
-        let projects = await redisGet(`projects:${userId}`);
+        let projects = cache.get(`projects:${userId}`);
 
         if(!projects) {
             projects = await getAllProjectsByUserId(userId);
-            await redisSet(`projects:${userId}`, projects, 5 * 60); // for 5 minutes
+            cache.set(`projects:${userId}`, projects);
         }
 
         return res.status(200).json({ message: "Projects fetched successfully", projects });
@@ -61,7 +62,7 @@ export const createProject = async (req, res) => {
         return res.status(500).json({ message: "Failed to check project existence" });   
     }
 
-    await redisDel(`projects:${userId}`);
+    cache.delete(`projects:${userId}`);
 
     try {
         const project = await createNewProject({ projectName, description, userId });
@@ -70,36 +71,6 @@ export const createProject = async (req, res) => {
         return res.status(201).json({ message: "Project created successfully", project });
     } catch (error) {
         return res.status(500).json({ message: "Failed to create project. Please try again." });
-    }
-};
-
-export const updateProject = async (req, res) => {
-    const { _id: userId } = req.identity;
-    const { projectId } = req.params;
-    const { projectName, description } = req.body;
-
-    if (!projectName) {
-        return res.status(400).json({ message: "Project name is required" });
-    }
-
-    try {
-        const existing = await isAlreadyExistsProject(userId, projectName);
-        if (existing) {
-            return res.status(409).json({ message: "A project with this name already exists for this user." });
-        }
-    } catch (error) {
-        console.error("Error checking existing project:", error);
-        return res.status(500).json({ message: "Failed to check project existence" });   
-    }
-
-    await redisDel(`projects:${userId}`);
-
-    try {
-        const project = await updateProjectDetails(projectId, projectName, description);
-        return res.status(200).json({ message: "Project details updated successfully", project });
-    } catch (error) {
-        console.error("Failed to update project details:", error);
-        return res.status(500).json({ message: "Failed to update project details. Please try again." });
     }
 };
 
@@ -114,7 +85,7 @@ export const deleteProject = async (req, res) => {
         return res.status(500).json({ message: "Failed to delete project. Please try again." });
     }
 
-    await redisDel(`projects:${userId}`);
+    cache.delete(`projects:${userId}`);
 
     try {
         await syncUserForProjectDelete(userId, projectId);

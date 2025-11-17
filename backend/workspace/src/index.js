@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import http from "http";
 
-import connectRedis from "./config/redis.js";
 import config from "./config/index.js";
 import initIO from "./config/socket.js"
 import corsConfig from "./config/cors.js";
@@ -26,14 +25,10 @@ app.use("/", router());
 
 app.get("/", (_, res) => res.send("Hello, World!"));
 
-connectRedis().then(() => {
-    server.listen(config.PORT, () => { 
-        console.log(`🚀 Server is listening on http://localhost:${config.PORT}`)
-    });
+server.listen(config.PORT, () => { 
+    console.log(`🚀 Server is listening on http://localhost:${config.PORT}`)
 });
 
-// connectRedis().then(() => {
-//     server.listen(config.PORT, "0.0.0.0", () => { 
-//         console.log(`🚀 Server is listening on http://localhost:${config.PORT}`)
-//     });
+// server.listen(config.PORT, "0.0.0.0", () => { 
+//     console.log(`🚀 Server is listening on http://localhost:${config.PORT}`)
 // });

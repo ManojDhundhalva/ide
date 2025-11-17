@@ -1,6 +1,6 @@
 import axios from "axios";
 import config from "./index.js";
-import { redisGet } from "../services/redisService.js";
+import cache from "../utils/cache.js";
 
 export const api = axios.create({
     baseURL: config.BACKEND_API,
@@ -9,7 +9,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-    const sessionToken = await redisGet("user:sessionToken");
+    const sessionToken = cache.get("user:sessionToken");
     if (sessionToken) config.headers["X-SESSION-TOKEN"] = sessionToken;  
     return config;
 }, (error) => {

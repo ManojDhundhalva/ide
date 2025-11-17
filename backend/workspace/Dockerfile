@@ -1,17 +1,4 @@
-FROM ubuntu:22.04
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    curl \
-    ca-certificates \
-    redis-server \
-    git \
-    python3 \
-    build-essential \
-    && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+FROM node:22-alpine
 
 ENV PORT=9000 \
     BASE_PATH="/home" \
@@ -29,4 +16,4 @@ RUN npm install
 
 EXPOSE 9000
 
-CMD ["bash", "-c", "redis-server --daemonize yes && node src/index.js"]
+CMD ["node", "src/index.js"]

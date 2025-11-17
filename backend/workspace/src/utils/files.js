@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import config from "../config/index.js";
-import { redisGet, redisSet, redisSetGetAll } from "../services/redisService.js";
+import cache from "./cache.js";
 
 export const getDirectoryEntries = async (requested = null) => {
     const targetPath = await getFullPath(requested);
@@ -43,7 +43,7 @@ export const isPathExists = async (path = "") => {
 };
 
 export const getFullPath = async (requested = null) => {
-    const baseDir = await redisGet("project:base-dir");
+    const baseDir = cache.get("project:base-dir");
     if(!requested) return baseDir;
     const targetPath = path.join(baseDir, requested);
     return targetPath;
@@ -51,12 +51,12 @@ export const getFullPath = async (requested = null) => {
 
 export const createFolderToBaseDir = async (projectName) => {
     const targetPath = path.join(config.BASE_PATH, projectName);
-    await redisSet("project:base-dir", targetPath);
+    cache.set("project:base-dir", targetPath);
     await fs.mkdir(targetPath, { recursive: true });
 }
 
 export const handleRefreshFileExplorer = async () => {
-    const expandedDirectories = await redisSetGetAll("file-explorer-expanded");
+    const expandedDirectories = cache.getAllEntriesInSet("file-explorer-expanded");
 
     const init = await Promise.all(
         expandedDirectories?.map(async (dirPath) => {

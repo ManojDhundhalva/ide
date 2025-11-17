@@ -1,12 +1,12 @@
 import fs from "fs";
 import pty from "node-pty";
 import { saveMetadata } from "../services/fileServices.js";
-import { redisGet, redisSet, redisSetAdd, redisSetRemove } from "../services/redisService.js"
 import { handleRefreshFileExplorer } from "../utils/files.js";
 import { getProject } from "../services/projectService.js";
+import cache from "../utils/cache.js";
 
 const spawnTerminal = async () => {
-    const baseDir = await redisGet("project:base-dir");
+    const baseDir = cache.get("project:base-dir"); 
     const ptyProcess = pty.spawn("bash", [], {
         name: 'xterm-color',
         cols: 80,
@@ -18,7 +18,7 @@ const spawnTerminal = async () => {
 };
 
 // function to watch file changes and emit socket events
-const watchFileSystem = async (io) => {
+const watchFileSystem = (io) => {
     let timeoutId = null;
     let isProcessing = false;
     
@@ -44,7 +44,7 @@ const watchFileSystem = async (io) => {
         }, DEBOUNCE_DELAY);
     };
 
-    const baseDir = await redisGet("project:base-dir");
+    const baseDir = cache.get("project:base-dir");
 
     const watcher = fs.watch(baseDir, { recursive: true }, async (eventType, filePath) => {
         if (!filePath) return;
@@ -80,7 +80,7 @@ const socketHandlers = (io) => {
             idleTimer = null;
         }
 
-        await redisSet("user:sessionToken", socket.handshake?.auth?.sessionToken || "");
+        cache.set("user:sessionToken", socket.handshake?.auth?.sessionToken || "");
         
         const { projectId } = socket.handshake?.auth;
 
@@ -173,23 +173,23 @@ const socketHandlers = (io) => {
         });
 
         socket.on("file-explorer:expand-folder", async ({ path }) => {
-            await redisSetAdd("file-explorer-expanded", path);
+            cache.addEntryInSet("file-explorer-expanded", path);
         });
 
         socket.on("file-explorer:collapse-folder", async ({ path }) => {
-            await redisSetRemove("file-explorer-expanded", path);
+            cache.deleteEntryInSet("file-explorer-expanded", path);
         });
 
         socket.on("tabs:set-active-tab", async ({ path }) => {
-            await redisSet("user:project:activeTab", path);
+            cache.set("user:project:activeTab", path);
         });
 
         socket.on("tabs:open-tab", async ({ path }) => {
-            await redisSetAdd("user:project:tabList", path);
+            cache.addEntryInSet("user:project:tabList", path);
         });
 
         socket.on("tabs:close-tab", async ({ path }) => {
-            await redisSetRemove("user:project:tabList", path);
+            cache.deleteEntryInSet("user:project:tabList", path);
         });
 
         socket.on("disconnect", async (reason) => {

@@ -1,10 +1,10 @@
-import { redisGet, redisSetGetAll } from "./redisService.js";
 import { api } from "../config/api.js";
+import cache from "../utils/cache.js";
 
 export const saveMetadata = async () => {
     try {
-        const sessionToken = await redisGet("user:sessionToken");
-        const projectId = await redisGet("user:project:projectId");
+        const sessionToken = cache.get("user:sessionToken");
+        const projectId = cache.get("user:project:projectId");
 
         if (!projectId) {
             console.error("saveMetadata: missing projectId — skipping save");
@@ -16,9 +16,9 @@ export const saveMetadata = async () => {
             return;
         }
 
-        const expandedDirectories = await redisSetGetAll("file-explorer-expanded");
-        const tabList = await redisSetGetAll("user:project:tabList");
-        const activeTab = await redisGet("user:project:activeTab");
+        const expandedDirectories = cache.getAllEntriesInSet("file-explorer-expanded");
+        const tabList = cache.getAllEntriesInSet("user:project:tabList");
+        const activeTab = cache.get("user:project:activeTab");
 
         await api.put(`/project/metadata/${projectId}`, { expandedDirectories, tabs: { tabList, activeTab } }, { headers: { "X-SESSION-TOKEN": sessionToken } });
     } catch (error) {

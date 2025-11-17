@@ -77,6 +77,7 @@ export const authenticate = async (req, res) => {
 
 export const logout = async(req, res) => {
     const sessionToken = req.headers["x-session-token"];
+    const { _id: userId } = req.identity;
 
     if(sessionToken) {
         cache.delete(`session:${sessionToken}`);

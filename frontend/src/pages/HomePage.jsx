@@ -337,7 +337,7 @@ const HomePage = () => {
                     Created On
                   </th>
                   <th style={{ padding: "12px 24px", textAlign: "left", fontSize: "14px", color: "#cccccc", whiteSpace: "nowrap", fontWeight: "bold" }}>
-                    Last opened
+                    Last updated
                   </th>
                   <th style={{ padding: "12px 24px", textAlign: "left", fontSize: "14px", color: "#cccccc", fontWeight: "bold" }}>
                     <button

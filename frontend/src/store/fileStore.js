@@ -79,6 +79,15 @@ export const useFileStore = create((set, get) => ({
         set({ activeTab: filePath });
     },
 
+    // NEW: Reorder tabs function
+    reorderTabs: (fromIndex, toIndex) => {
+        const { tabs } = get();
+        const newTabs = [...tabs];
+        const [movedTab] = newTabs.splice(fromIndex, 1);
+        newTabs.splice(toIndex, 0, movedTab);
+        set({ tabs: newTabs });
+    },
+
     fileTree: new Map(),
 
     initFilesLoading: false,
@@ -99,8 +108,8 @@ export const useFileStore = create((set, get) => ({
         const { fileTree } = get();
 
         const parts = filePath.split("/");
-        const fileName = parts.pop(); // "file.js"
-        const dirPath = parts.join("/"); // "dir1/dir2/dir3"
+        const fileName = parts.pop();
+        const dirPath = parts.join("/");
 
         if (!fileTree.has(dirPath)) return false;
 
@@ -146,7 +155,6 @@ export const useFileStore = create((set, get) => ({
         }
     },
 
-    // when you click then you get files and folders
     getFiles: async (path = "") => {
         try {
             set({ getFilesLoading: true, getFilesError: null, getFilesDirectoryPath: path });
@@ -168,7 +176,6 @@ export const useFileStore = create((set, get) => ({
         }
     },
 
-    // when you click a file the you get it's contents
     getFileContent: async (path) => {
         try {
             set({ getFileContentLoading: true, getFileContentError: null, getFileContentFilePath: path });

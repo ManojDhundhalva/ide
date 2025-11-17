@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useFileStore } from '../store/fileStore';
 import { getFileIcon } from "../utils/language";
 
@@ -6,7 +7,11 @@ export default function TabsComponent({ socket }) {
   const activeTab = useFileStore((s) => s.activeTab);
   const setActiveTab = useFileStore((s) => s.setActiveTab);
   const closeTab = useFileStore((s) => s.closeTab);
+  const reorderTabs = useFileStore((s) => s.reorderTabs);
   const fileExistsInDirectory = useFileStore((s) => s.fileExistsInDirectory);
+
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const handleTabClick = (filePath) => {
     setActiveTab(filePath, socket);
@@ -15,6 +20,41 @@ export default function TabsComponent({ socket }) {
   const handleTabClose = (filePath, e) => {
     e.stopPropagation();
     closeTab(filePath, socket);
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      reorderTabs(draggedIndex, dropIndex);
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   if (tabs.length === 0) {
@@ -28,14 +68,22 @@ export default function TabsComponent({ socket }) {
       borderBottom: '1px solid #3e3e3e',
       overflowX: 'auto'
     }}>
-      {tabs.map((tab) => {
+      {tabs.map((tab, index) => {
         const isActive = activeTab === tab.filePath;
+        const isDragging = draggedIndex === index;
+        const isDragOver = dragOverIndex === index;
 
         if(!fileExistsInDirectory(tab.filePath)) return null;
         
         return (
           <div
             key={tab.filePath}
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragEnd={handleDragEnd}
             onClick={() => handleTabClick(tab.filePath)}
             style={{
               display: 'flex',
@@ -44,21 +92,23 @@ export default function TabsComponent({ socket }) {
               padding: '6px 10px',
               backgroundColor: isActive ? '#1e1e1e' : '#2d2d2d',
               borderRight: '1px solid #3e3e3e',
-              cursor: 'pointer',
+              borderLeft: isDragOver ? '2px solid #007acc' : 'none',
+              cursor: isDragging ? 'grabbing' : 'pointer',
               minWidth: '120px',
               maxWidth: '200px',
               fontSize: '13px',
               color: isActive ? '#fff' : '#ccc',
               userSelect: 'none',
-              transition: 'background-color 0.2s'
+              opacity: isDragging ? 0.5 : 1,
+              transition: 'background-color 0.2s, opacity 0.2s'
             }}
             onMouseEnter={(e) => {
-              if (!isActive) {
+              if (!isActive && !isDragging) {
                 e.currentTarget.style.backgroundColor = '#383838';
               }
             }}
             onMouseLeave={(e) => {
-              if (!isActive) {
+              if (!isActive && !isDragging) {
                 e.currentTarget.style.backgroundColor = '#2d2d2d';
               }
             }}

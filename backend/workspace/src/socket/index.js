@@ -2,7 +2,7 @@ import fs from "fs";
 import pty from "node-pty";
 import { saveMetadata } from "../services/fileServices.js";
 import { handleRefreshFileExplorer } from "../utils/files.js";
-import { getProject } from "../services/projectService.js";
+import { getProject, stopEC2 } from "../services/projectService.js";
 import cache from "../utils/cache.js";
 
 const spawnTerminal = async () => {
@@ -193,7 +193,6 @@ const socketHandlers = (io) => {
         });
 
         socket.on("disconnect", async (reason) => {
-            await saveMetadata();
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             
             // Kill all terminals for this socket
@@ -212,9 +211,10 @@ const socketHandlers = (io) => {
 
             // Start shutdown timer if no one is connected
             if (activeConnections === 0) {
-                idleTimer = setTimeout(() => {
+                idleTimer = setTimeout(async () => {
                     console.log("No active users for 10 minutes. Stopping container...");
-                    process.exit(0);
+                    await saveMetadata();
+                    await stopEC2(projectId);
                 }, IDLE_TIMEOUT);
             }
         });

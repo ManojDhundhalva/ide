@@ -27,7 +27,7 @@ export const useProjectStore = create((set) => ({
 
             set({ project: data.project });
 
-            return data.project;
+            return { project: data.project, ec2_ip: data.ec2_ip };
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || `Failed to fetch project of id: ${projectId}`;
@@ -41,7 +41,7 @@ export const useProjectStore = create((set) => ({
 
     getAllProjects: async () => {
         try {
-            set({ getAllProjectsLoading: true, getAllProjectsError: null });
+            set({ project: null, getAllProjectsLoading: true, getAllProjectsError: null });
 
             const { data } = await api.get("/project");
 
@@ -59,7 +59,7 @@ export const useProjectStore = create((set) => ({
 
     createProject: async (content) => {
         try {
-            set({ createProjectLoading: true, createProjectError: null });
+            set({ project: null, createProjectLoading: true, createProjectError: null });
 
             const { data } = await api.post("/project", content);
 
@@ -76,7 +76,7 @@ export const useProjectStore = create((set) => ({
 
     deleteProject: async (projectId) => {
         try {
-            set({ deleteProjectLoading: true, deleteProjectError: null });
+            set({ project: null, deleteProjectLoading: true, deleteProjectError: null });
 
             await api.delete(`/project/${projectId}`);
 

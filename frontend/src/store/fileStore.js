@@ -1,10 +1,17 @@
 import { create } from "zustand";
-import { apiWS } from "../config/api";
+import axios from "axios";
 
 export const useFileStore = create((set, get) => ({
 
     tabs: [],
+
+    ec2_ip: null,
+
     activeTab: null,
+
+    setEC2Ip: (ip) => {
+        set({ ec2_ip: ip });
+    },
 
     initTabs: (initialTabs = [], initialActiveTab = null) => {
         const tabs = initialTabs.map((item) => ({
@@ -134,7 +141,9 @@ export const useFileStore = create((set, get) => ({
         try {
             set({ initFilesLoading: true, initFilesError: null });
 
-            const { data } = await apiWS.get("/files/init");
+            const url = `${get().ec2_ip}:9000`;
+
+            const { data } = await axios.get(`${url}/files/init`);
 
             set((state) => {
                 const newFileTree = new Map(state.fileTree);
@@ -159,7 +168,9 @@ export const useFileStore = create((set, get) => ({
         try {
             set({ getFilesLoading: true, getFilesError: null, getFilesDirectoryPath: path });
 
-            const { data } = await apiWS.get(`/files?path=${path}`);
+            const url = `${get().ec2_ip}:9000`;
+
+            const { data } = await axios.get(`${url}/files?path=${path}`);
 
             set((state) => {
                 const newFileTree = new Map(state.fileTree);
@@ -184,7 +195,9 @@ export const useFileStore = create((set, get) => ({
                 throw new Error("Path cannot be empty");
             }
 
-            const { data } = await apiWS.get(`/file?path=${path}`);
+            const url = `${get().ec2_ip}:9000`;
+
+            const { data } = await axios.get(`${url}/file?path=${path}`);
 
             return data.content;
 
@@ -206,7 +219,9 @@ export const useFileStore = create((set, get) => ({
 
             if (!currentFilePath) return;
 
-            await apiWS.put(`/file?path=${currentFilePath}`, { content });
+            const url = `${get().ec2_ip}:9000`;
+
+            await axios.put(`${url}/file?path=${currentFilePath}`, { content });
 
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message || "Failed to save file content";

@@ -7,9 +7,10 @@ import {
     deletedProjectByProjectId, 
     syncUserForProjectDelete,
     updateMetadataOfProject,
+    getInstanceIdByProjectId,
 } from "../services/projectService.js";
 
-// import { startProjectContainer } from "../utils/aws.js";
+import { createInstance, startInstance, stopInstance, getPublicIP } from "../utils/aws.js";
 
 import cache from "../utils/cache.js";
 
@@ -19,7 +20,11 @@ export const getProject = async (req, res) => {
 
         const project = await getProjectByProjectId(projectId);
 
-        return res.status(200).json({ message: "Project fetched successfully", project });
+        const ip = await getPublicIP(project.instanceId);
+
+        delete project.instanceId;
+
+        return res.status(200).json({ message: "Project fetched successfully", project, ec2_ip: ip });
     } catch (error) {
         console.error("Error fetching projects:", error);
         return res.status(500).json({ message: "Failed to fetch projects" });
@@ -65,12 +70,16 @@ export const createProject = async (req, res) => {
     cache.delete(`projects:${userId}`);
 
     try {
-        const project = await createNewProject({ projectName, description, userId });
+        const instanceId = await createInstance(`${Date.now()}-${projectName}`);
+        
+        const project = await createNewProject({ projectName, description, userId, instanceId });
+
         await addProjectToUser(userId, project._id);
-        // await startProjectContainer(project._id);
+
         return res.status(201).json({ message: "Project created successfully", project });
     } catch (error) {
-        return res.status(500).json({ message: "Failed to create project. Please try again." });
+        console.log(error);
+        return res.status(500).json({ message: "Failed to create project. Please try again."});
     }
 };
 
@@ -88,7 +97,18 @@ export const deleteProject = async (req, res) => {
     cache.delete(`projects:${userId}`);
 
     try {
+        let instanceId = cache.get(`project:ec2-instance-id:${projectId}`);
+
+        if(!instanceId) {
+            instanceId = await getInstanceIdByProjectId(projectId);
+        }
+        
+        await deleteInstance(instanceId);
+
+        cache.delete(`project:ec2-instance-id:${projectId}`);
+        
         await syncUserForProjectDelete(userId, projectId);
+
         return res.status(200).json({ message: "Project deleted successfully" });
     } catch (error) {
         console.error("Failed to sync user for project deletion:", error);
@@ -122,6 +142,46 @@ export const updateMetadata = async (req, res) => {
         return res.status(200).json({ message: "Metadata updated successfully" });
     } catch (error) {
         console.error("Error updating metadata:", error);
-        return res.status(500).json({ message: "Failed to update metadata", error: error.message });
+        return res.status(500).json({ message: "Failed to update metadata" });
+    }
+};
+
+export const startEC2 = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        let instanceId = cache.get(`project:ec2-instance-id:${projectId}`);
+
+        if(!instanceId) {
+            instanceId = await getInstanceIdByProjectId(projectId);
+            cache.set(`project:ec2-instance-id:${projectId}`, instanceId);
+        }
+
+        await startInstance(instanceId);
+        
+        return res.status(200).json({ message: "Instance started successfully" });
+    } catch (error) {
+        console.error("Error statring ec2 instance:", error);
+        return res.status(500).json({ message: "Failed to start ec2 instance" });
+    }
+};
+
+export const stopEC2 = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        let instanceId = cache.get(`project:ec2-instance-id:${projectId}`);
+
+        if(!instanceId) {
+            instanceId = await getInstanceIdByProjectId(projectId);
+            cache.set(`project:ec2-instance-id:${projectId}`, instanceId);
+        }
+
+        await stopInstance(instanceId);
+        
+        return res.status(200).json({ message: "Instance stopped successfully" });
+    } catch (error) {
+        console.error("Error statring ec2 instance:", error);
+        return res.status(500).json({ message: "Failed to stop ec2 instance" });
     }
 };

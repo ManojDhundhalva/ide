@@ -26,3 +26,13 @@ export const getProject = async (projectId) => {
         return false;
     }
 }
+
+export const stopEC2 = async (projectId) => {
+    try {
+        const sessionToken = cache.get("user:sessionToken");
+        await api.get(`/project/stop/${projectId}`, { headers: { "X-SESSION-TOKEN": sessionToken } });
+    } catch (error) {
+        const errorMsg = error.response?.data?.message || error.message || "Failed to stop ec2 instance";
+        console.error("stopEC2 Error:", errorMsg);
+    }
+};

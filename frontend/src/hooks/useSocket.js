@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import config from '../config';
+import { useFileStore } from '../store/fileStore';
+import { useProjectStore } from '../store/projectStore';
 
-export const useSocket = ({ sessionToken, projectId }) => {
+export const useSocket = () => {
   const [socket, setSocket] = useState(null);
+  const sessionToken = window.localStorage.getItem("session-token"); 
+  const projectId = useProjectStore((s) => s.project).projectId;
+  const ec2_ip = useFileStore((s) => s.ec2_ip);
+  const workspace_url = `${ec2_ip}:9000`
 
   useEffect(() => {
     // Initialize socket only in browser
     if (typeof window === 'undefined') return;
 
     console.log('Initializing socket connection...');
-    const socketInstance = io(config.WORKSPACE_URL, {
-      withCredentials: true,
+    const socketInstance = io(workspace_url, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

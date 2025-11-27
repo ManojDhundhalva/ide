@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 import { useSocket } from "../hooks/useSocket";
@@ -9,42 +7,12 @@ import FileExplorerComponent from "../components/FileExplorer";
 import CodeEditorComponent from "../components/CodeEditor";
 import TabsComponent from "../components/Tabs";
 
-import { useFileStore } from "../store/fileStore";
-import { useProjectStore } from "../store/projectStore";
-
 import "../css/WorkspacePage.css";
 
 const WorkspacePage = () => {
-  const { id: projectId } = useParams();
 
-  const socket = useSocket({ 
-    sessionToken: window.localStorage.getItem("session-token"), 
-    projectId 
-  });
-
-  const initFiles = useFileStore((s) => s.initFiles);
-  const initTabs = useFileStore((s) => s.initTabs);
-
-  const getProject = useProjectStore((s) => s.getProject);
-
-  const [fetching, setFetching] = useState(true);
-
-  useEffect(() => {
-    const initialization = async () => {
-      await initFiles();
-      const project = await getProject(projectId);
-      const { tabList, activeTab } = project.metadata.tabs;
-      initTabs(tabList, activeTab);
-      setFetching(false);
-    };
-
-    initialization();
-  }, []);
-
-  if(fetching) {
-    return <h1>Loading...</h1>
-  }
-
+  const socket = useSocket();
+  
   return (
     <div className="workspace-container">
       <PanelGroup direction="horizontal">

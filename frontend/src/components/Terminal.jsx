@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import BashComponent from "./bash";
+import BashComponent from "./Bash";
 import BashIcon from "../assets/bash.png";
 
 export default function Bash({ socket }) {

@@ -1,9 +1,11 @@
 import { ProjectModel } from "../models/projects.js";
 import { UserModel } from "../models/users.js";
 
-export const getProjectByProjectId = (projectId) => ProjectModel.findById(projectId).select('userId projectName description updatedAt createdAt metadata.expandedDirectories metadata.tabs').lean();
+export const getProjectByProjectId = (projectId) => ProjectModel.findById(projectId).select('userId projectName instanceId description updatedAt createdAt metadata.expandedDirectories metadata.tabs').lean();
 
 export const getUserIdByProjectId = (projectId) => ProjectModel.findById(projectId, { userId: 1, _id: 0 });
+
+export const getInstanceIdByProjectId = (projectId) => ProjectModel.findById(projectId, { instanceId: 1, _id: 0 }).lean();
 
 export const getAllProjectsByUserId = (userId) => 
     ProjectModel.find({ userId }, { 
@@ -24,8 +26,8 @@ export const createNewProject = (values) =>
         });
 
 export const isAlreadyExistsProject = async (userId, projectName) => {
-  const exists = await ProjectModel.exists({ userId, projectName });
-  return !!exists;
+    const exists = await ProjectModel.exists({ userId, projectName });
+    return !!exists;
 };
 
 export const addProjectToUser = (userId, projectId) => UserModel.findByIdAndUpdate(userId, { $push: { projects: projectId } });

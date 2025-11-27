@@ -7,6 +7,11 @@ const projectSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        instanceId: {
+            type: String,
+            required: true,
+            unique: true,
+        },
         description: {
             type: String,
             default: "",

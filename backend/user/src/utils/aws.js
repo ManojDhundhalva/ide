@@ -57,6 +57,7 @@ export const createInstance = async (instanceName = "MyEC2Instance") => {
         InstanceType: "t3.micro",
         MinCount: 1,
         MaxCount: 1,
+        SecurityGroupIds: [awsConfig.AWS_SECURITY_GROUP_ID],
         UserData: Buffer.from(userDataScript).toString("base64"),
         BlockDeviceMappings: [
             {

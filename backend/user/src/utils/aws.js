@@ -12,11 +12,11 @@ const ec2 = new EC2Client({
 const userDataScript = `
 #!/bin/bash
 
-apt update -y
-apt install -y git curl
+sudo apt update -y
+sudo apt install -y git curl build-essential
 
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-apt install -y nodejs
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+sudo apt install -y nodejs
 
 mkdir -p /home/ubuntu/work/app
 cd /home/ubuntu/work/app
@@ -45,9 +45,9 @@ WantedBy=multi-user.target
 EOF
 
 # Reload services and enable the app
-systemctl daemon-reload
-systemctl enable myapp.service
-systemctl start myapp.service
+sudo systemctl daemon-reload
+sudo systemctl enable myapp.service
+sudo systemctl start myapp.service
 `;
 
 

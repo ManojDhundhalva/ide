@@ -5,8 +5,11 @@ import { useProjectStore } from '../store/projectStore';
 
 export const useSocket = () => {
   const [socket, setSocket] = useState(null);
-  const sessionToken = window.localStorage.getItem("session-token"); 
-  const projectId = useProjectStore((s) => s.project).projectId;
+  const sessionToken = window.localStorage.getItem("session-token");
+  
+  const project = useProjectStore((s) => s.project);
+  const projectId = project.id;
+  
   const ec2_ip = useFileStore((s) => s.ec2_ip);
   const workspace_url = `${ec2_ip}:9000`
 

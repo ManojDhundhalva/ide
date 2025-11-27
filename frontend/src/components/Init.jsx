@@ -14,7 +14,6 @@ const InitComponent = () => {
   const setEC2Ip = useFileStore((s) => s.setEC2Ip);
 
   const getProject = useProjectStore((s) => s.getProject);
-  const project = useProjectStore((s) => s.project);
 
   const [fetching, setFetching] = useState(true);
 
@@ -36,10 +35,6 @@ const InitComponent = () => {
   }, []);
 
   if(fetching) {
-    return <h1>Loading...</h1>
-  }
-
-  if(!project?.projectId) {
     return <h1>Loading...</h1>
   }
 

@@ -9,13 +9,55 @@ const ec2 = new EC2Client({
     }
 });
 
-// add permission "0.0.0.0/0"
+const userDataScript = `
+#!/bin/bash
+
+apt update -y
+apt install -y git curl
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+
+mkdir -p /home/ubuntu/work/app
+cd /home/ubuntu/work/app
+
+git clone https://github.com/ManojDhundhalva/ide
+
+cd ide/backend/workspace
+npm install
+
+# -------- Create systemd service --------
+cat <<EOF > /etc/systemd/system/myapp.service
+[Unit]
+Description=My Node.js App
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/work/app/ide/backend/workspace
+ExecStart=/usr/bin/node src/index.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload services and enable the app
+systemctl daemon-reload
+systemctl enable myapp.service
+systemctl start myapp.service
+`;
+
+
 export const createInstance = async (instanceName = "MyEC2Instance") => {
     const params = {
-        ImageId: "ami-0ecb62995f68bb549", // Example: Amazon Linux 2 in ap-south-1
+        ImageId: "ami-0ecb62995f68bb549",
         InstanceType: "t3.micro",
         MinCount: 1,
         MaxCount: 1,
+        UserData: Buffer.from(userDataScript).toString("base64"),
         BlockDeviceMappings: [
             {
                 DeviceName: "/dev/xvda", // root volume

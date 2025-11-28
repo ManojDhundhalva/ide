@@ -74,6 +74,10 @@ const socketHandlers = (io) => {
         activeConnections++;
         console.log(`New client connected: ${socket.id}`);
 
+        setInterval(() => {
+            socket.emit("ping", { timestamp: Date.now() });
+        }, 3000);
+
         // Clear any existing idle timer
         if (idleTimer) {
             clearTimeout(idleTimer);

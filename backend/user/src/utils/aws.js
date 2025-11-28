@@ -112,6 +112,18 @@ export const getPublicIP = async (instanceId) => {
     return ip;
 }
 
+export const getPublicDNS = async (instanceId) => {
+    const params = { InstanceIds: [instanceId] };
+
+    const data = await ec2.send(new DescribeInstancesCommand(params));
+    const instance = data.Reservations[0].Instances[0];
+
+    const dns = instance.PublicDnsName;
+    console.log("Public DNS:", dns);
+
+    return dns;
+};
+
 export const stopInstance = async (instanceId) => {
     try {
         // First, check the current state of the instance

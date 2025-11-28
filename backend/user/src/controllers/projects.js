@@ -10,7 +10,7 @@ import {
     getInstanceIdByProjectId,
 } from "../services/projectService.js";
 
-import { createInstance, startInstance, stopInstance, getPublicIP, deleteInstance, getInstanceStatus } from "../utils/aws.js";
+import { createInstance, startInstance, stopInstance, getPublicIP, getPublicDNS, deleteInstance, getInstanceStatus } from "../utils/aws.js";
 
 import cache from "../utils/cache.js";
 
@@ -20,11 +20,13 @@ export const getProject = async (req, res) => {
 
         const project = await getProjectByProjectId(projectId);
 
-        const ip = await getPublicIP(project.instanceId);
+        // const ip = await getPublicIP(project.instanceId);
+
+        const public_dns = await getPublicDNS(project.instanceId);
 
         delete project.instanceId;
 
-        return res.status(200).json({ message: "Project fetched successfully", project, ec2_ip: `https://${ip}` });
+        return res.status(200).json({ message: "Project fetched successfully", project, ec2_ip: `http://${public_dns}` });
     } catch (error) {
         console.error("Error fetching projects:", error);
         return res.status(500).json({ message: "Failed to fetch projects" });

@@ -10,7 +10,7 @@ import {
     getInstanceIdByProjectId,
 } from "../services/projectService.js";
 
-import { createInstance, startInstance, stopInstance, getPublicIP } from "../utils/aws.js";
+import { createInstance, startInstance, stopInstance, getPublicIP, deleteInstance } from "../utils/aws.js";
 
 import cache from "../utils/cache.js";
 

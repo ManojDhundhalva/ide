@@ -84,6 +84,8 @@ const socketHandlers = (io) => {
         
         const { projectId } = socket.handshake?.auth;
 
+        socket.emit("project-id", projectId);
+
         if (!projectId) {
             console.error('No projectId provided during socket connection');
             socket.disconnect();

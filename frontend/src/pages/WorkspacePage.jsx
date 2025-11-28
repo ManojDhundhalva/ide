@@ -8,10 +8,21 @@ import CodeEditorComponent from "../components/CodeEditor";
 import TabsComponent from "../components/Tabs";
 
 import "../css/WorkspacePage.css";
+import { useEffect } from "react";
 
 const WorkspacePage = () => {
 
   const socket = useSocket();
+  
+  useEffect(() => {
+    socket.on("project-id", (data)=>{
+      console.log("data", data);
+    });
+
+    return () => {
+      socket.off("project-id");
+    };
+  }, [socket]);
   
   return (
     <div className="workspace-container">

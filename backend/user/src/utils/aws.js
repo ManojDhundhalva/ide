@@ -15,7 +15,7 @@ const userDataScript = `
 sudo apt update -y
 sudo apt install -y git curl build-essential
 
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo bash -
 sudo apt install -y nodejs
 
 mkdir -p /home/ubuntu/work/app

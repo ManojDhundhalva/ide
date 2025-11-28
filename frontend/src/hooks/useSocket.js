@@ -6,7 +6,7 @@ import { useProjectStore } from '../store/projectStore';
 export const useSocket = () => {
   const [socket, setSocket] = useState(null);
   const sessionToken = window.localStorage.getItem("session-token");
-  
+
   const project = useProjectStore((s) => s.project);
   // be defensive: project may be undefined initially
   const projectId = project?._id || null;
@@ -37,8 +37,11 @@ export const useSocket = () => {
       console.log('Socket connected successfully', socketInstance.id);
     });
 
-    socketInstance.on('disconnect', (reason) => {
+    socketInstance.on('disconnect', (reason, details) => {
       console.log('Socket disconnected', reason);
+      console.log(details.message);
+      console.log(details.description);
+      console.log(details.context);
     });
 
     socketInstance.on('connect_error', (error) => {
@@ -49,7 +52,7 @@ export const useSocket = () => {
       console.log('Cleaning up socket connection');
       try { socketInstance.disconnect(); } catch (e) { /* ignore */ }
     };
-  // re-run when workspace_url or projectId changes
+    // re-run when workspace_url or projectId changes
   }, [workspace_url, projectId]);
 
   return socket;

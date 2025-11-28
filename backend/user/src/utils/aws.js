@@ -11,20 +11,32 @@ const ec2 = new EC2Client({
 
 const userDataScript = `
 #!/bin/bash
+export DEBIAN_FRONTEND=noninteractive
 
 sudo apt update -y
 sudo apt install -y git curl build-essential
 
-sudo curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo bash -
+# 1. Fetch the NodeSource setup script and save it
+curl -fsSL https://deb.nodesource.com/setup_lts.x -o /tmp/nodesource_setup.sh
+
+# 2. Execute the setup script with sudo
+sudo bash /tmp/nodesource_setup.sh
+
+# 3. Install nodejs (which includes npm)
 sudo apt install -y nodejs
 
+# Verify installation
+echo "Node version: $(node -v)"
+echo "NPM version: $(npm -v)"
+
+# --- Existing App Setup ---
 mkdir -p /home/ubuntu/work/app
 cd /home/ubuntu/work/app
 
 git clone https://github.com/ManojDhundhalva/ide
 
 cd ide/backend/workspace
-npm install
+sudo npm install
 
 # -------- Create systemd service --------
 cat <<EOF > /etc/systemd/system/myapp.service
@@ -123,7 +135,7 @@ export const stopInstance = async (instanceId) => {
             //     previousState: currentState,
             //     currentState: 'stopping' // It enters stopping state immediately
             // };
-        } 
+        }
         // else if (currentState === 'stopped') {
         //     console.log("Instance is already stopped:", instanceId);
         //     return { 
@@ -202,7 +214,7 @@ export const startInstance = async (instanceId) => {
             }));
             console.log("Instance started:", instanceId);
             // return { success: true, message: 'Instance started successfully', previousState: currentState };
-        } 
+        }
         // else if (currentState === 'running') {
         //     console.log("Instance is already running:", instanceId);
         //     return { success: true, message: 'Instance is already running', currentState: currentState };

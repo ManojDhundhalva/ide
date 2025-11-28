@@ -19,6 +19,9 @@ export const useProjectStore = create((set) => ({
     deleteProjectLoading: false,
     deleteProjectError: null,
 
+    getProjectStatusLoading: false,
+    getProjectStatusError: null,
+
     getProject: async (projectId) => {
         try {
             set({ project: null, getProjectLoading: true, getProjectError: null });
@@ -90,6 +93,23 @@ export const useProjectStore = create((set) => ({
             console.error("DeleteProject Error:", errorMsg);
         } finally {
             set({ deleteProjectLoading: false });
+        }
+    },
+
+    getProjectStatus: async (projectId) => {
+        try {
+            set({ getProjectStatusLoading: true, getProjectStatusError: null });
+
+            const { data } = await api.get(`/project/status/${projectId}`);
+
+            return data.status;
+
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message || "Failed to get project status";
+            set({ getProjectStatus: errorMsg });
+            console.error("GetProjectStatus Error:", errorMsg);
+        } finally {
+            set({ getProjectStatusLoading: false });
         }
     },
 }));

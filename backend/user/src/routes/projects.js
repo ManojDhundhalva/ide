@@ -1,4 +1,4 @@
-import { getProject, createProject, getAllProjectsOfUser, deleteProject, updateMetadata, startEC2, stopEC2 } from "../controllers/projects.js";
+import { getProject, createProject, getAllProjectsOfUser, deleteProject, updateMetadata, startEC2, stopEC2, getProjectStatus } from "../controllers/projects.js";
 import { isAuthenticated, isOwner } from "../middleware/index.js";
 
 export default (router) => {
@@ -9,4 +9,5 @@ export default (router) => {
     router.put   ("/project/metadata/:projectId", isAuthenticated, isOwner, updateMetadata);
     router.post  ("/project/start/:projectId",    isAuthenticated, isOwner, startEC2);
     router.post  ("/project/stop/:projectId",     isAuthenticated, isOwner, stopEC2);
+    router.get   ("/project/status/:projectId",   isAuthenticated, isOwner, getProjectStatus);
 }

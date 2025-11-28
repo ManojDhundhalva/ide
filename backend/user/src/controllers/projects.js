@@ -10,7 +10,7 @@ import {
     getInstanceIdByProjectId,
 } from "../services/projectService.js";
 
-import { createInstance, startInstance, stopInstance, getPublicIP, deleteInstance } from "../utils/aws.js";
+import { createInstance, startInstance, stopInstance, getPublicIP, deleteInstance, getInstanceStatus } from "../utils/aws.js";
 
 import cache from "../utils/cache.js";
 
@@ -24,7 +24,7 @@ export const getProject = async (req, res) => {
 
         delete project.instanceId;
 
-        return res.status(200).json({ message: "Project fetched successfully", project, ec2_ip: ip });
+        return res.status(200).json({ message: "Project fetched successfully", project, ec2_ip: `http://${ip}` });
     } catch (error) {
         console.error("Error fetching projects:", error);
         return res.status(500).json({ message: "Failed to fetch projects" });
@@ -180,6 +180,26 @@ export const stopEC2 = async (req, res) => {
         await stopInstance(instanceId);
         
         return res.status(200).json({ message: "Instance stopped successfully" });
+    } catch (error) {
+        console.error("Error statring ec2 instance:", error);
+        return res.status(500).json({ message: "Failed to stop ec2 instance" });
+    }
+};
+
+export const getProjectStatus = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        let instanceId = cache.get(`project:ec2-instance-id:${projectId}`);
+
+        if(!instanceId) {
+            instanceId = await getInstanceIdByProjectId(projectId);
+            cache.set(`project:ec2-instance-id:${projectId}`, instanceId);
+        }
+
+        const projectStatus = await getInstanceStatus(instanceId);
+        
+        return res.status(200).json({ message: "Instance stopped successfully", projectStatus });
     } catch (error) {
         console.error("Error statring ec2 instance:", error);
         return res.status(500).json({ message: "Failed to stop ec2 instance" });

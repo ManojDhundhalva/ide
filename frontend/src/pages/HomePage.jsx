@@ -24,6 +24,7 @@ const HomePage = () => {
   const createProject = useProjectStore((s) => s.createProject);
   const deleteProject = useProjectStore((s) => s.deleteProject);
   const createProjectLoading = useProjectStore((s) => s.createProjectLoading);
+  const getProjectStatus = useProjectStore((s) => s.getProjectStatus);
 
   useEffect(() => {
     getAllProjects();

@@ -241,3 +241,20 @@ export const deleteInstance = async (instanceId) => {
 
     console.log("Instance deleted:", instanceId);
 };
+
+export const getInstanceStatus = async (instanceId) => {
+    try {
+        const params = { InstanceIds: [instanceId] };
+        const data = await ec2.send(new DescribeInstancesCommand(params));
+
+        const instance = data.Reservations[0].Instances[0];
+        const state = instance.State.Name;       // running | stopped | pending | stopping | terminated
+
+        console.log(`Instance ${instanceId} status: ${state}`);
+
+        return state; 
+    } catch (error) {
+        console.error("Error getting instance status:", error);
+        throw error;
+    }
+};

@@ -6,6 +6,8 @@ const initIO = (server) => {
         cors: {
             origin: config.CLIENT_URL,
             methods: ['GET', 'POST', 'PUT', 'DELETE'],
+            allowedHeaders: "*",
+            transports: ['websocket', 'polling']
         }
     });
     return io;

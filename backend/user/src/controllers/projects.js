@@ -26,7 +26,7 @@ export const getProject = async (req, res) => {
 
         delete project.instanceId;
 
-        return res.status(200).json({ message: "Project fetched successfully", project, ec2_ip: `ws://${public_dns}` });
+        return res.status(200).json({ message: "Project fetched successfully", project, ec2_ip: `http://${public_dns}` });
     } catch (error) {
         console.error("Error fetching projects:", error);
         return res.status(500).json({ message: "Failed to fetch projects" });

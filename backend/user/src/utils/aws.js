@@ -9,68 +9,67 @@ const ec2 = new EC2Client({
     }
 });
 
-const userDataScript = `
-#!/bin/bash
-export DEBIAN_FRONTEND=noninteractive
+// const userDataScript = `
+// #!/bin/bash
+// export DEBIAN_FRONTEND=noninteractive
 
-sudo apt update -y
-sudo apt install -y git curl build-essential
+// sudo apt update -y
+// sudo apt install -y git curl build-essential
 
-# 1. Fetch the NodeSource setup script and save it
-curl -fsSL https://deb.nodesource.com/setup_lts.x -o /tmp/nodesource_setup.sh
+// # 1. Fetch the NodeSource setup script and save it
+// curl -fsSL https://deb.nodesource.com/setup_lts.x -o /tmp/nodesource_setup.sh
 
-# 2. Execute the setup script with sudo
-sudo bash /tmp/nodesource_setup.sh
+// # 2. Execute the setup script with sudo
+// sudo bash /tmp/nodesource_setup.sh
 
-# 3. Install nodejs (which includes npm)
-sudo apt install -y nodejs
+// # 3. Install nodejs (which includes npm)
+// sudo apt install -y nodejs
 
-# Verify installation
-echo "Node version: $(node -v)"
-echo "NPM version: $(npm -v)"
+// # Verify installation
+// echo "Node version: $(node -v)"
+// echo "NPM version: $(npm -v)"
 
-# --- Existing App Setup ---
-mkdir -p /home/ubuntu/work/app
-cd /home/ubuntu/work/app
+// # --- Existing App Setup ---
+// mkdir -p /home/ubuntu/work/app
+// cd /home/ubuntu/work/app
 
-git clone https://github.com/ManojDhundhalva/ide
+// git clone https://github.com/ManojDhundhalva/ide
 
-cd ide/backend/workspace
-sudo npm install
+// cd ide/backend/workspace
+// sudo npm install
 
-# -------- Create systemd service --------
-cat <<EOF > /etc/systemd/system/myapp.service
-[Unit]
-Description=My Node.js App
-After=network.target
+// # -------- Create systemd service --------
+// cat <<EOF > /etc/systemd/system/myapp.service
+// [Unit]
+// Description=My Node.js App
+// After=network.target
 
-[Service]
-Type=simple
-User=ubuntu
-WorkingDirectory=/home/ubuntu/work/app/ide/backend/workspace
-ExecStart=/usr/bin/node src/index.js
-Restart=always
-RestartSec=10
+// [Service]
+// Type=simple
+// User=ubuntu
+// WorkingDirectory=/home/ubuntu/work/app/ide/backend/workspace
+// ExecStart=/usr/bin/node src/index.js
+// Restart=always
+// RestartSec=10
 
-[Install]
-WantedBy=multi-user.target
-EOF
+// [Install]
+// WantedBy=multi-user.target
+// EOF
 
-# Reload services and enable the app
-sudo systemctl daemon-reload
-sudo systemctl enable myapp.service
-sudo systemctl start myapp.service
-`;
-
+// # Reload services and enable the app
+// sudo systemctl daemon-reload
+// sudo systemctl enable myapp.service
+// sudo systemctl start myapp.service
+// `;
 
 export const createInstance = async (instanceName = "MyEC2Instance") => {
     const params = {
-        ImageId: "ami-0ecb62995f68bb549",
+        ImageId: "ami-06e6340f629806dfe",
         InstanceType: "t3.micro",
         MinCount: 1,
         MaxCount: 1,
         SecurityGroupIds: [awsConfig.AWS_SECURITY_GROUP_ID],
-        UserData: Buffer.from(userDataScript).toString("base64"),
+        // UserData: Buffer.from(userDataScript).toString("base64"),
         BlockDeviceMappings: [
             {
                 DeviceName: "/dev/xvda", // root volume

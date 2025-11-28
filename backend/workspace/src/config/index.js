@@ -13,7 +13,8 @@ const config = {
     PORT: 9000,
     BASE_PATH: "/home",
     BACKEND_API: "https://ide-yujg.onrender.com",
-    CLIENT_URL: "https://ide-web-app.netlify.app"
+    CLIENT_URL: "http://ide-web-app-fe.s3-website-us-east-1.amazonaws.com"
+    // CLIENT_URL: "https://ide-web-app.netlify.app"
 };
 
 export const status = Object.freeze({

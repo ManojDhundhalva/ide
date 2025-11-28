@@ -8,7 +8,7 @@ export const useSocket = () => {
   const sessionToken = window.localStorage.getItem("session-token");
   
   const project = useProjectStore((s) => s.project);
-  const projectId = project.id;
+  const projectId = project._id;
   
   const ec2_ip = useFileStore((s) => s.ec2_ip);
   const workspace_url = `${ec2_ip}:9000`

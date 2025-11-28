@@ -15,6 +15,8 @@ const WorkspacePage = () => {
   const socket = useSocket();
   
   useEffect(() => {
+    if(socket == null) return;
+
     socket.on("project-id", (data)=>{
       console.log("data", data);
     });

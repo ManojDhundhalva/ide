@@ -5,6 +5,7 @@ import { useFileStore } from "../store/fileStore";
 import { useProjectStore } from "../store/projectStore";
 
 import WorkspacePage from "../pages/WorkspacePage";
+import LoadingComponent from "./Loading";
 
 const InitComponent = () => {
   const { id: projectId } = useParams();
@@ -35,7 +36,7 @@ const InitComponent = () => {
   }, []);
 
   if(fetching) {
-    return <h1>Loading...</h1>
+    return <LoadingComponent />;
   }
 
   return <WorkspacePage />;

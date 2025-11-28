@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from "axios";
 
 import { useProjectStore } from "../store/projectStore";
+import { useFileStore } from '../store/fileStore';
 
 export default function UploadDialog({ open, onClose, targetPath }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -12,6 +13,7 @@ export default function UploadDialog({ open, onClose, targetPath }) {
   const [isDragging, setIsDragging] = useState(false);
 
   const project = useProjectStore((s) => s.project);
+  const ec2_ip = useFileStore((s) => s.ec2_ip);
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
@@ -62,7 +64,7 @@ export default function UploadDialog({ open, onClose, targetPath }) {
 
     selectedFiles.forEach(file => formData.append("files", file));
 
-    const url = "http://localhost:9000/upload"
+    const url = `${ec2_ip}:9000/upload`;
 
     try {
       await axios.post(url, formData, { 

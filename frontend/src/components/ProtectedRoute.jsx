@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import LoadingComponent from "./Loading";
+
+import { Box } from "@mui/material";
+import WifiOffRoundedIcon from '@mui/icons-material/WifiOffRounded';
 
 const ProtectedRoute = ({ Component }) => {
     const navigate = useNavigate();
@@ -33,8 +37,35 @@ const ProtectedRoute = ({ Component }) => {
 
     return (
         <>
-            {!isOnline && <h2><b>You are offline</b></h2>}
-            {user.userId ? <div><Component /></div> : <h1>Loading...</h1>}
+            {!isOnline && (
+                <Box
+                    sx={{
+                    position: "fixed",
+                    top: 16,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    backgroundColor: "rgba(242, 57, 57, 0.95)",
+                    color: "white",
+                    padding: "6px 12px",
+                    borderRadius: "12px",
+                    boxShadow: "0 10px 25px rgba(239, 68, 68, 0.3)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    zIndex: 9999,
+                    fontFamily: "Quicksand, sans-serif",
+                    fontWeight: 600,
+                    fontSize: "14px",
+                    animation: "slideDown 0.3s ease-out"
+                    }}
+                >
+                    <WifiOffRoundedIcon sx={{ fontSize: "20px" }} />
+                    You are offline
+                </Box>
+            )}
+            {user.userId ? <div><Component /></div> : <LoadingComponent />}
         </>
     )
 }

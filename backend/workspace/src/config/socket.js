@@ -6,7 +6,6 @@ const initIO = (server) => {
         cors: {
             origin: config.CLIENT_URL,
             methods: ['GET', 'POST', 'PUT', 'DELETE'],
-            credentials: true
         },
         transports: ['websocket', 'polling'],
         allowUpgrades: true,

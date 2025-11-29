@@ -25,7 +25,7 @@ export const useSocket = () => {
     console.log('Initializing socket connection...', workspace_url, projectId);
 
     const socketInstance = io(workspace_url, {
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
       auth: { sessionToken, projectId }

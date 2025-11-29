@@ -6,9 +6,13 @@ const initIO = (server) => {
         cors: {
             origin: config.CLIENT_URL,
             methods: ['GET', 'POST', 'PUT', 'DELETE'],
+            credentials: true
         },
-        transports: ['websocket', 'polling'],
+        transports: ['websocket'],
+        pingInterval: 25000,
+        pingTimeout: 60000,
         allowUpgrades: true,
+        allowEIO3: true
     });
     return io;
 }

@@ -90,19 +90,19 @@ const socketHandlers = (io) => {
 
         socket.emit("project-id", projectId);
 
-        if (!projectId) {
-            console.error('No projectId provided during socket connection');
-            socket.disconnect();
-            return;
-        }
+        // if (!projectId) {
+        //     console.error('No projectId provided during socket connection');
+        //     socket.disconnect();
+        //     return;
+        // }
 
         const isProjectExist = await getProject(projectId);
 
-        if (!isProjectExist) {
-            console.error('Invalid projectId', projectId);
-            socket.disconnect();
-            return;
-        }
+        // if (!isProjectExist) {
+        //     console.error('Invalid projectId', projectId);
+        //     socket.disconnect();
+        //     return;
+        // }
 
         await watchFileSystem(io);
 

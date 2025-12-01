@@ -199,6 +199,8 @@ const socketHandlers = (io) => {
         });
 
         socket.on("disconnect", async (reason) => {
+            await saveMetadata();
+            
             console.log(`Socket ${socket.id} disconnected: ${reason}`);
             
             // Kill all terminals for this socket
@@ -219,7 +221,6 @@ const socketHandlers = (io) => {
             if (activeConnections === 0) {
                 idleTimer = setTimeout(async () => {
                     console.log("No active users for 10 minutes. Stopping container...");
-                    await saveMetadata();
                     await stopEC2(projectId);
                 }, IDLE_TIMEOUT);
             }

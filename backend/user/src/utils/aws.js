@@ -64,7 +64,7 @@ const ec2 = new EC2Client({
 
 export const createInstance = async (instanceName = "MyEC2Instance") => {
     const params = {
-        ImageId: "ami-04a29fdd80a22cb9b",
+        ImageId: "ami-0ac4ece2a857f2f9e",
         InstanceType: "t3.micro",
         MinCount: 1,
         MaxCount: 1,

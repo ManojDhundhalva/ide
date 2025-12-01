@@ -39,9 +39,6 @@ export const useSocket = () => {
 
     socketInstance.on('disconnect', (reason, details) => {
       console.log('Socket disconnected', reason);
-      console.log(details.message);
-      console.log(details.description);
-      console.log(details.context);
     });
 
     socketInstance.on('connect_error', (error) => {

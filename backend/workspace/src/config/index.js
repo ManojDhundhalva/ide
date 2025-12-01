@@ -11,7 +11,7 @@ dotenv.config();
 
 const config = {
     PORT: 9000,
-    BASE_PATH: "/home",
+    BASE_PATH: "/home/ubuntu",
     BACKEND_API: "http://ec2-44-192-16-138.compute-1.amazonaws.com:3000",
     CLIENT_URL: "http://ide-web-app-fe.s3-website-us-east-1.amazonaws.com"
     // CLIENT_URL: "https://ide-web-app.netlify.app"

@@ -39,7 +39,9 @@ const ec2 = new EC2Client({
 // sudo npm install
 
 // # -------- Create systemd service --------
-// cat <<EOF > /etc/systemd/system/myapp.service
+// sudo touch /etc/systemd/system/myapp.service
+// sudo nano /etc/systemd/system/myapp.service
+
 // [Unit]
 // Description=My Node.js App
 // After=network.target
@@ -54,7 +56,6 @@ const ec2 = new EC2Client({
 
 // [Install]
 // WantedBy=multi-user.target
-// EOF
 
 // # Reload services and enable the app
 // sudo systemctl daemon-reload

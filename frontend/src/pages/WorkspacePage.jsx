@@ -10,8 +10,11 @@ import TabsComponent from "../components/Tabs";
 import "../css/WorkspacePage.css";
 import { useEffect } from "react";
 
+import { useFileStore } from "../store/fileStore";
+
 const WorkspacePage = () => {
 
+  const ec2_ip = useFileStore((s) => s.ec2_ip);
   const socket = useSocket();
   
   useEffect(() => {
@@ -31,8 +34,11 @@ const WorkspacePage = () => {
       <PanelGroup direction="horizontal">
         <Panel defaultSize={20} minSize={15} maxSize={80} className="sidebar-panel">
           <div className="panel-content">
-            <div className="panel-header">
+            <div className="panel-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3>Explorer</h3>
+              <a href={ec2_ip} target="_blank" title={ec2_ip}>
+                <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: "smaller", color: "white" }}></i>
+              </a>
             </div>
             <FileExplorerComponent socket={socket}/>
           </div>

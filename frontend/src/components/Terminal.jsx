@@ -4,7 +4,7 @@ import BashComponent from "./Bash";
 import BashIcon from "../assets/bash.png";
 
 export default function Bash({ socket }) {
-  const [terminals, setTerminals] = useState([{ id: Date.now(), name: "bash" }]);
+  const [terminals, setTerminals] = useState([]);
   const [selectedTerminalId, setSelectedTerminalId] = useState(terminals[0]?.id);
 
   const createTerminal = () => {

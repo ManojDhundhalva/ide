@@ -1,10 +1,6 @@
-Here is your **updated, beautiful, polished README.md** with a professional finish **and your names added at the end** exactly as requested.
-
----
-
 # ✨ Cloud IDE – Distributed Multi-Workspace Development Platform
 
-A modern cloud-based IDE platform inspired by **Replit**, designed to provide **isolated compute workspaces on AWS EC2** for every user project.
+A modern cloud-based IDE platform designed to provide **isolated compute workspaces on AWS EC2** for every user project.
 This system delivers a seamless real-time coding experience using **Monaco Editor**, **Xterm terminal**, **WebSockets**, and **dedicated EC2 instances** for high performance.
 
 ---
@@ -32,18 +28,7 @@ When a user creates a project:
 
 ## 🏗️ Architecture Diagram
 
-```
-Frontend
-   ├── Auth & Create-Project → User Backend
-   ├── WebSocket ↔ Workspace-1 (EC2)
-   ├── WebSocket ↔ Workspace-2 (EC2)
-   └── WebSocket ↔ Workspace-3 (EC2)
-
-User Backend
-   ├── Creates EC2 instance per project
-   ├── Coordinates workspace servers
-   └── Stores metadata in MongoDB
-```
+![img](./Images/cloud.jpeg)
 
 ---
 

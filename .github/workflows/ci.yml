@@ -1,0 +1,76 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-user:
+    name: Test Backend - User Service
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/user
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (User Service)
+        run: npm install
+
+      - name: Run User Tests
+        run: npm test
+
+  test-workspace:
+    name: Test Backend - Workspace Service
+    runs-on: ubuntu-latest
+    needs: test-user     
+    defaults:
+      run:
+        working-directory: backend/workspace
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (Workspace Service)
+        run: npm install
+
+      - name: Run Workspace Tests
+        run: npm test
+
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: 
+      - test-user
+      - test-workspace    
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies (Frontend)
+        run: npm install
+
+      - name: Build Frontend
+        run: npm run build

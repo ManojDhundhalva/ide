@@ -11,7 +11,7 @@ import {
 
 import * as projectService from "../src/services/projectService.js";
 import * as aws from "../src/utils/aws.js";
-import cache from "../../utils/cache.js";
+import cache from "../src/utils/cache.js";
 
 // Mock all external dependencies
 jest.mock("../src/services/projectService.js");

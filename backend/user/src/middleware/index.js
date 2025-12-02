@@ -26,7 +26,7 @@ export const isOwner = async (req, res, next) => {
         next();
 
     } catch (error) {
-        console.error("isOwner middleware error:", error);
+        console.log("isOwner middleware error:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 }
@@ -57,7 +57,7 @@ export const isAuthenticated = async (req, res, next) => {
         return next();
 
     } catch (error) {
-        console.error("Authentication middleware error:", error);
+        console.log("Authentication middleware error:", error);
         return res.status(500).json({ message: "Internal server error" });
     }
 }

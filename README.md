@@ -36,8 +36,8 @@ When a user creates a project:
 
 ```
 /frontend                  → React + Vite frontend (Editor, Terminal UI)
-/user-backend             → Auth, Project Management, EC2 Provisioning
-/workspace-backend        → Terminal + FS backend, runs on EC2
+/backend/user              → Auth, Project Management, EC2 Provisioning
+/backend/workspace         → Terminal + FS backend, runs on EC2
 ```
 
 ---
@@ -138,8 +138,8 @@ User Backend:
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/your-repo/cloud-ide.git
-cd cloud-ide
+git clone https://github.com/ManojDhundhalva/ide.git
+cd ide
 ```
 
 ---
@@ -157,15 +157,15 @@ npm run dev
 ### User Backend
 
 ```bash
-cd user-backend
+cd backend/user
 npm install
-npm run dev
+node src/index.js
 ```
 
 ### Workspace Backend
 
 ```bash
-cd workspace-backend
+cd backend/workspace
 npm install
 node src/index.js
 ```
@@ -227,6 +227,10 @@ CLIENT_URL=YOUR_CLIENT_URL
 ### Run Tests
 
 ```bash
+cd backend/user
+npm test
+
+cd backend/workspace
 npm test
 ```
 
